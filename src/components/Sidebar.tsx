@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Chat, User } from '../types';
+import { Chat, User, Theme } from '../types';
 import { Search, PlusCircle, Settings, Sun, Moon } from 'lucide-react';
 import ChatListItem from './ChatListItem';
 import ProfileHeader from './ProfileHeader';
@@ -15,6 +15,8 @@ interface SidebarProps {
   darkMode: boolean;
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
   onCreateChat: (userId: string) => void;
+  theme: Theme;
+  onThemeChange: (theme: Theme) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -25,7 +27,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   onChatSelect,
   darkMode,
   setDarkMode,
-  onCreateChat
+  onCreateChat,
+  theme,
+  onThemeChange
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
@@ -121,6 +125,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         currentUser={currentUser}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
+        theme={theme}
+        onThemeChange={onThemeChange}
       />
     </div>
   );

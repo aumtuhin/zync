@@ -13,13 +13,21 @@ interface SettingsDialogProps {
   onThemeChange: (theme: Theme) => void;
 }
 
+const defaultTheme: Theme = {
+  primary: '#10B981',
+  secondary: '#6B7280',
+  background: '#FFFFFF',
+  textPrimary: '#111827',
+  textSecondary: '#4B5563'
+};
+
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
   isOpen,
   onClose,
   currentUser,
   darkMode,
   setDarkMode,
-  theme,
+  theme = defaultTheme,
   onThemeChange,
 }) => {
   const [showThemeCustomization, setShowThemeCustomization] = useState(false);
