@@ -56,13 +56,23 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         chat.participants.includes(user.id) && user.id !== currentUser.id
       );
 
+  const chatBackgroundStyle = theme.chatBackground
+    ? {
+        backgroundImage: `url(${theme.chatBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        opacity: 0.2
+      }
+    : {
+        backgroundColor: '#f0f0f0',
+        opacity: 0.1
+      };
+
   return (
     <div className="h-full flex flex-col bg-[#e5e5e5] dark:bg-gray-850 relative">
       <div 
-        className="absolute inset-0 opacity-10 pointer-events-none bg-cover bg-center bg-no-repeat" 
-        style={{ 
-          backgroundImage: theme.chatBackground ? `var(--chat-background)` : undefined
-        }}
+        className="absolute inset-0 pointer-events-none"
+        style={chatBackgroundStyle}
       />
       
       <ProfileHeader 

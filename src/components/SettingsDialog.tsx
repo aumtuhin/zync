@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Dialog } from '@headlessui/react';
-import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Image } from 'lucide-react';
+import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Image, Upload } from 'lucide-react';
 import { User, Theme } from '../types';
 
 interface SettingsDialogProps {
@@ -19,7 +19,7 @@ const defaultTheme: Theme = {
   background: '#FFFFFF',
   textPrimary: '#000000',
   textSecondary: '#667781',
-  chatBackground: 'https://images.pexels.com/photos/7130498/pexels-photo-7130498.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
+  chatBackground: ''
 };
 
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
@@ -32,17 +32,27 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   onThemeChange,
 }) => {
   const [showThemeCustomization, setShowThemeCustomization] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleColorChange = (key: keyof Theme, value: string) => {
     onThemeChange({ ...theme, [key]: value });
   };
 
-  const backgroundOptions = [
-    'https://images.pexels.com/photos/7130498/pexels-photo-7130498.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-    'https://images.pexels.com/photos/5486/bird-s-eye-view-cars-parking-lot.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-    'https://images.pexels.com/photos/1939485/pexels-photo-1939485.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-    'https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
-  ];
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        handleColorChange('chatBackground', result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleResetBackground = () => {
+    handleColorChange('chatBackground', '');
+  };
 
   return (
     <Dialog
@@ -140,18 +150,27 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Chat Background
                   </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    {backgroundOptions.map((bg, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleColorChange('chatBackground', bg)}
-                        className={`relative aspect-video rounded-lg overflow-hidden border-2 ${
-                          theme.chatBackground === bg ? 'border-green-500' : 'border-transparent'
-                        }`}
-                      >
-                        <img src={bg} alt={`Background ${index + 1}`} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Upload size={20} />
+                      Upload Custom Background
+                    </button>
+                    <button
+                      onClick={handleResetBackground}
+                      className="w-full py-2 px-4 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      Remove Background
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
                   </div>
                 </div>
               </div>
