@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Image, Upload } from 'lucide-react';
-import { User, Theme } from '../types';
+import { User, Theme, predefinedBackgrounds } from '../types';
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -150,27 +150,42 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Chat Background
                   </label>
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Upload size={20} />
-                      Upload Custom Background
-                    </button>
-                    <button
-                      onClick={handleResetBackground}
-                      className="w-full py-2 px-4 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      Remove Background
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-2">
+                      {predefinedBackgrounds.map((bg, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleColorChange('chatBackground', bg)}
+                          className={`relative aspect-square rounded-lg overflow-hidden border-2 ${
+                            theme.chatBackground === bg ? 'border-blue-500' : 'border-transparent'
+                          }`}
+                        >
+                          <img src={bg} alt={`Background ${index + 1}`} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Upload size={20} />
+                        Upload Custom Background
+                      </button>
+                      <button
+                        onClick={handleResetBackground}
+                        className="w-full py-2 px-4 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        Remove Background
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
