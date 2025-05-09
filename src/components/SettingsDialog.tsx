@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { X, Moon, Sun, Bell, Lock, UserCircle, Palette } from 'lucide-react';
+import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Image } from 'lucide-react';
 import { User, Theme } from '../types';
 
 interface SettingsDialogProps {
@@ -14,11 +14,12 @@ interface SettingsDialogProps {
 }
 
 const defaultTheme: Theme = {
-  primary: '#10B981',
-  secondary: '#6B7280',
+  primary: '#25D366',
+  secondary: '#128C7E',
   background: '#FFFFFF',
-  textPrimary: '#111827',
-  textSecondary: '#4B5563'
+  textPrimary: '#000000',
+  textSecondary: '#667781',
+  chatBackground: 'https://images.pexels.com/photos/7130498/pexels-photo-7130498.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
 };
 
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
@@ -35,6 +36,13 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   const handleColorChange = (key: keyof Theme, value: string) => {
     onThemeChange({ ...theme, [key]: value });
   };
+
+  const backgroundOptions = [
+    'https://images.pexels.com/photos/7130498/pexels-photo-7130498.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+    'https://images.pexels.com/photos/5486/bird-s-eye-view-cars-parking-lot.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+    'https://images.pexels.com/photos/1939485/pexels-photo-1939485.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+    'https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
+  ];
 
   return (
     <Dialog
@@ -126,6 +134,25 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     onChange={(e) => handleColorChange('textSecondary', e.target.value)}
                     className="w-full h-10 rounded cursor-pointer"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Chat Background
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {backgroundOptions.map((bg, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleColorChange('chatBackground', bg)}
+                        className={`relative aspect-video rounded-lg overflow-hidden border-2 ${
+                          theme.chatBackground === bg ? 'border-green-500' : 'border-transparent'
+                        }`}
+                      >
+                        <img src={bg} alt={`Background ${index + 1}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

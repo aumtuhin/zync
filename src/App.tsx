@@ -14,7 +14,8 @@ function App() {
     secondary: '#128C7E',
     background: '#FFFFFF',
     textPrimary: '#000000',
-    textSecondary: '#667781'
+    textSecondary: '#667781',
+    chatBackground: 'https://images.pexels.com/photos/7130498/pexels-photo-7130498.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
   });
 
   const handleSendMessage = (content: string) => {
@@ -94,6 +95,7 @@ function App() {
     document.documentElement.style.setProperty('--color-background', newTheme.background);
     document.documentElement.style.setProperty('--color-text-primary', newTheme.textPrimary);
     document.documentElement.style.setProperty('--color-text-secondary', newTheme.textSecondary);
+    document.documentElement.style.setProperty('--chat-background', `url(${newTheme.chatBackground})`);
   };
 
   return (
@@ -121,6 +123,7 @@ function App() {
             currentUser={currentUser}
             onSendMessage={handleSendMessage}
             onDeleteChat={handleDeleteChat}
+            theme={theme}
           />
         }
       />

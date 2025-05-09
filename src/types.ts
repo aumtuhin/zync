@@ -36,4 +36,5 @@ export interface Theme {
   background: string;
   textPrimary: string;
   textSecondary: string;
+  chatBackground?: string;
 }
