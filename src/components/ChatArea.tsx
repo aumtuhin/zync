@@ -1,12 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Chat, User, Theme } from '../types';
+import { Chat, User, Theme, Message } from '../types';
 import ProfileHeader from './ProfileHeader';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
-import { Phone, Video, MoreVertical, Trash2 } from 'lucide-react';
+import { Phone, Video, MoreVertical, Trash2, Search } from 'lucide-react';
 import StatusDot from './StatusDot';
 import { formatUserLastSeen } from '../utils/dateUtils';
 import DeleteChatDialog from './DeleteChatDialog';
+import MessageSearchDialog from './MessageSearchDialog';
+import DeleteMessageDialog from './DeleteMessageDialog';
 
 interface ChatAreaProps {
   chat: Chat | null;
@@ -14,6 +16,7 @@ interface ChatAreaProps {
   currentUser: User;
   onSendMessage: (content: string) => void;
   onDeleteChat: (chatId: string) => void;
+  onDeleteMessage: (messageId: string, deleteForEveryone: boolean) => void;
   theme: Theme;
 }
 
@@ -23,14 +26,23 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   currentUser, 
   onSendMessage,
   onDeleteChat,
+  onDeleteMessage,
   theme
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [isDeleteMessageDialogOpen, setIsDeleteMessageDialogOpen] = useState(false);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chat?.messages]);
+
+  const handleMessageDelete = (message: Message) => {
+    setSelectedMessage(message);
+    setIsDeleteMessageDialogOpen(true);
+  };
 
   if (!chat) {
     return (
@@ -70,10 +82,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         opacity: 0.1
       };
 
-  const handleDeleteChat = () => {
-    setIsDeleteDialogOpen(true);
-  };
-
   return (
     <div className="h-full flex flex-col bg-[#e5e5e5] dark:bg-gray-850 relative">
       <div 
@@ -102,6 +110,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                 </span>
               </div>
             )}
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
+            >
+              <Search size={20} />
+            </button>
             <button className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full">
               <Video size={20} />
             </button>
@@ -109,7 +123,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
               <Phone size={20} />
             </button>
             <button 
-              onClick={handleDeleteChat}
+              onClick={() => setIsDeleteDialogOpen(true)}
               className="text-red-500 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
             >
               <Trash2 size={20} />
@@ -136,6 +150,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
               isCurrentUser={isCurrentUser}
               sender={sender}
               isConsecutive={isConsecutive}
+              onDelete={() => handleMessageDelete(message)}
             />
           );
         })}
@@ -149,6 +164,28 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={() => onDeleteChat(chat.id)}
         chatName={otherParticipant?.name || chat.groupName || ''}
+      />
+
+      <MessageSearchDialog
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        messages={chat.messages}
+        users={users}
+      />
+
+      <DeleteMessageDialog
+        isOpen={isDeleteMessageDialogOpen}
+        onClose={() => {
+          setIsDeleteMessageDialogOpen(false);
+          setSelectedMessage(null);
+        }}
+        onConfirm={(deleteForEveryone) => {
+          if (selectedMessage) {
+            onDeleteMessage(selectedMessage.id, deleteForEveryone);
+          }
+          setIsDeleteMessageDialogOpen(false);
+          setSelectedMessage(null);
+        }}
       />
     </div>
   );

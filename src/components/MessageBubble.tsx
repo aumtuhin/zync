@@ -1,23 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Message, User } from '../types';
 import { formatMessageTime } from '../utils/dateUtils';
 import MessageStatus from './MessageStatus';
+import { MoreVertical, Trash2 } from 'lucide-react';
 
 interface MessageBubbleProps {
   message: Message;
   isCurrentUser: boolean;
   sender?: User;
   isConsecutive: boolean;
+  onDelete: () => void;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ 
   message, 
   isCurrentUser, 
   sender,
-  isConsecutive
+  isConsecutive,
+  onDelete
 }) => {
+  const [showOptions, setShowOptions] = useState(false);
+
   return (
-    <div className={`flex mb-1 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+    <div 
+      className={`flex mb-1 group ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+      onMouseEnter={() => setShowOptions(true)}
+      onMouseLeave={() => setShowOptions(false)}
+    >
       <div 
         className={`relative max-w-[65%] px-3 py-2 rounded-lg ${
           isCurrentUser 
@@ -39,6 +48,23 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </span>
           {isCurrentUser && <MessageStatus status={message.status} size={14} />}
         </div>
+
+        {showOptions && (
+          <div 
+            className={`absolute top-0 ${isCurrentUser ? 'left-0 -translate-x-full' : 'right-0 translate-x-full'} 
+            flex items-center space-x-1 bg-white dark:bg-gray-700 rounded-lg shadow-lg p-1`}
+          >
+            <button 
+              onClick={onDelete}
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
+            >
+              <Trash2 size={16} className="text-red-500" />
+            </button>
+            <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full">
+              <MoreVertical size={16} className="text-gray-500 dark:text-gray-400" />
+            </button>
+          </div>
+        )}
         
         {/* Chat bubble tail */}
         {!isConsecutive && (

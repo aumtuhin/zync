@@ -88,6 +88,25 @@ function App() {
     }
   };
 
+  const handleDeleteMessage = (messageId: string, deleteForEveryone: boolean) => {
+    if (!activeChat) return;
+
+    const updatedChats = chats.map(chat => {
+      if (chat.id === activeChat.id) {
+        const updatedMessages = chat.messages.filter(msg => msg.id !== messageId);
+        return {
+          ...chat,
+          messages: updatedMessages,
+          lastMessage: updatedMessages[updatedMessages.length - 1] || null,
+        };
+      }
+      return chat;
+    });
+
+    setChats(updatedChats);
+    setActiveChat(updatedChats.find(chat => chat.id === activeChat.id) || null);
+  };
+
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);
     document.documentElement.style.setProperty('--color-primary', newTheme.primary);
@@ -123,6 +142,7 @@ function App() {
             currentUser={currentUser}
             onSendMessage={handleSendMessage}
             onDeleteChat={handleDeleteChat}
+            onDeleteMessage={handleDeleteMessage}
             theme={theme}
           />
         }
