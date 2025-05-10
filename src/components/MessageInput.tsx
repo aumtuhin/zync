@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Smile, Paperclip, Mic, Send } from 'lucide-react';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
 
 interface MessageInputProps {
   onSendMessage: (content: string) => void;
@@ -7,6 +9,8 @@ interface MessageInputProps {
 
 const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
   const [message, setMessage] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
   
   const handleSend = () => {
     if (message.trim()) {
@@ -21,13 +25,34 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
       handleSend();
     }
   };
+
+  const handleEmojiSelect = (emoji: any) => {
+    setMessage(prev => prev + emoji.native);
+    setShowEmojiPicker(false);
+  };
   
   return (
     <div className="px-4 py-3 bg-gray-100 dark:bg-gray-750 border-t border-gray-200 dark:border-gray-700 z-10">
       <div className="flex items-center space-x-2">
-        <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-          <Smile size={22} />
-        </button>
+        <div className="relative">
+          <button 
+            ref={emojiButtonRef}
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          >
+            <Smile size={22} />
+          </button>
+          
+          {showEmojiPicker && (
+            <div className="absolute bottom-12 left-0">
+              <Picker 
+                data={data} 
+                onEmojiSelect={handleEmojiSelect}
+                theme={localStorage.theme === 'dark' ? 'dark' : 'light'}
+              />
+            </div>
+          )}
+        </div>
         
         <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
           <Paperclip size={22} />

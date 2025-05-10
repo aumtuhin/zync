@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Image, Upload } from 'lucide-react';
-import { User, Theme, predefinedBackgrounds } from '../types';
+import { User, Theme } from '../types';
+import ProfilePage from './ProfilePage';
+import PrivacyPage from './PrivacyPage';
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -22,6 +24,8 @@ const defaultTheme: Theme = {
   chatBackground: ''
 };
 
+type Page = 'settings' | 'theme' | 'profile' | 'privacy';
+
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
   isOpen,
   onClose,
@@ -31,7 +35,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   theme = defaultTheme,
   onThemeChange,
 }) => {
-  const [showThemeCustomization, setShowThemeCustomization] = useState(false);
+  const [currentPage, setCurrentPage] = useState<Page>('settings');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleColorChange = (key: keyof Theme, value: string) => {
@@ -54,6 +58,40 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     handleColorChange('chatBackground', '');
   };
 
+  if (currentPage === 'profile') {
+    return (
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        className="fixed inset-0 z-50 overflow-y-auto"
+      >
+        <div className="flex items-center justify-center min-h-screen">
+          <Dialog.Overlay className="fixed inset-0 bg-black/30" />
+          <div className="relative bg-white dark:bg-gray-800 w-full h-full">
+            <ProfilePage user={currentUser} onClose={() => setCurrentPage('settings')} />
+          </div>
+        </div>
+      </Dialog>
+    );
+  }
+
+  if (currentPage === 'privacy') {
+    return (
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        className="fixed inset-0 z-50 overflow-y-auto"
+      >
+        <div className="flex items-center justify-center min-h-screen">
+          <Dialog.Overlay className="fixed inset-0 bg-black/30" />
+          <div className="relative bg-white dark:bg-gray-800 w-full h-full">
+            <PrivacyPage user={currentUser} onClose={() => setCurrentPage('settings')} />
+          </div>
+        </div>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog
       open={isOpen}
@@ -66,7 +104,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         <div className="relative bg-white dark:bg-gray-800 w-full max-w-md mx-auto rounded-lg shadow-lg">
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <Dialog.Title className="text-lg font-medium text-gray-900 dark:text-white">
-              {showThemeCustomization ? 'Theme Customization' : 'Settings'}
+              {currentPage === 'theme' ? 'Theme Customization' : 'Settings'}
             </Dialog.Title>
             <button
               onClick={onClose}
@@ -76,10 +114,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             </button>
           </div>
 
-          {showThemeCustomization ? (
+          {currentPage === 'theme' ? (
             <div className="p-4 space-y-4">
               <button
-                onClick={() => setShowThemeCustomization(false)}
+                onClick={() => setCurrentPage('settings')}
                 className="text-blue-500 mb-4"
               >
                 ← Back to Settings
@@ -176,6 +214,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         onClick={handleResetBackground}
                         className="w-full py-2 px-4 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                       >
+                
                         Remove Background
                       </button>
                       <input
@@ -209,7 +248,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               </div>
 
               <div className="space-y-2">
-                <button className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                <button 
+                  onClick={() => setCurrentPage('profile')}
+                  className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
                   <UserCircle className="text-gray-500 dark:text-gray-400" size={20} />
                   <span className="ml-3 text-gray-800 dark:text-white">Profile</span>
                 </button>
@@ -219,13 +261,16 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   <span className="ml-3 text-gray-800 dark:text-white">Notifications</span>
                 </button>
 
-                <button className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                <button 
+                  onClick={() => setCurrentPage('privacy')}
+                  className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
                   <Lock className="text-gray-500 dark:text-gray-400" size={20} />
                   <span className="ml-3 text-gray-800 dark:text-white">Privacy</span>
                 </button>
 
                 <button
-                  onClick={() => setShowThemeCustomization(true)}
+                  onClick={() => setCurrentPage('theme')}
                   className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <Palette className="text-gray-500 dark:text-gray-400" size={20} />

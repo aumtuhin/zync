@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Chat, User, Theme } from '../types';
 import ProfileHeader from './ProfileHeader';
 import MessageBubble from './MessageBubble';
@@ -6,6 +6,7 @@ import MessageInput from './MessageInput';
 import { Phone, Video, MoreVertical, Trash2 } from 'lucide-react';
 import StatusDot from './StatusDot';
 import { formatUserLastSeen } from '../utils/dateUtils';
+import DeleteChatDialog from './DeleteChatDialog';
 
 interface ChatAreaProps {
   chat: Chat | null;
@@ -25,6 +26,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   theme
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -68,6 +70,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         opacity: 0.1
       };
 
+  const handleDeleteChat = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
   return (
     <div className="h-full flex flex-col bg-[#e5e5e5] dark:bg-gray-850 relative">
       <div 
@@ -103,7 +109,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
               <Phone size={20} />
             </button>
             <button 
-              onClick={() => onDeleteChat(chat.id)}
+              onClick={handleDeleteChat}
               className="text-red-500 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
             >
               <Trash2 size={20} />
@@ -137,6 +143,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       </div>
       
       <MessageInput onSendMessage={onSendMessage} />
+
+      <DeleteChatDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={() => onDeleteChat(chat.id)}
+        chatName={otherParticipant?.name || chat.groupName || ''}
+      />
     </div>
   );
 };
