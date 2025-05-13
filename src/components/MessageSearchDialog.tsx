@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
-import { Search, X } from 'lucide-react';
+import { Search, X, ArrowDown } from 'lucide-react';
 import { Message, User } from '../types';
 import { formatMessageTime } from '../utils/dateUtils';
 
@@ -9,6 +9,7 @@ interface MessageSearchDialogProps {
   onClose: () => void;
   messages: Message[];
   users: User[];
+  onScrollToMessage: (messageId: string) => void;
 }
 
 const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
@@ -16,6 +17,7 @@ const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
   onClose,
   messages,
   users,
+  onScrollToMessage,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredMessages, setFilteredMessages] = useState<Message[]>([]);
@@ -30,6 +32,17 @@ const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
       setFilteredMessages([]);
     }
   }, [searchQuery, messages]);
+
+  const highlightText = (text: string) => {
+    if (!searchQuery.trim()) return text;
+
+    const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
+    return parts.map((part, index) => 
+      part.toLowerCase() === searchQuery.toLowerCase() ? (
+        <span key={index} className="bg-yellow-200 dark:bg-yellow-600">{part}</span>
+      ) : part
+    );
+  };
 
   return (
     <Dialog
@@ -57,10 +70,11 @@ const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
             <div className="relative mb-4">
               <input
                 type="text"
-                placeholder="Search messages"
+                placeholder="Search in conversation"
                 className="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg pl-10 pr-4 py-2 focus:outline-none"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
               />
               <Search className="absolute left-3 top-2.5 text-gray-500 dark:text-gray-400" size={18} />
             </div>
@@ -69,9 +83,13 @@ const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
               {filteredMessages.map(message => {
                 const sender = users.find(user => user.id === message.sender);
                 return (
-                  <div
+                  <button
                     key={message.id}
-                    className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                    onClick={() => {
+                      onScrollToMessage(message.id);
+                      onClose();
+                    }}
+                    className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors group"
                   >
                     <div className="flex justify-between items-baseline mb-1">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -82,9 +100,10 @@ const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
                       </span>
                     </div>
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {message.content}
+                      {highlightText(message.content)}
                     </p>
-                  </div>
+                    <ArrowDown className="hidden group-hover:block absolute right-2 bottom-2 text-gray-400" size={16} />
+                  </button>
                 );
               })}
               {searchQuery && filteredMessages.length === 0 && (

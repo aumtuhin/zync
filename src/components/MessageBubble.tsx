@@ -28,7 +28,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       onMouseLeave={() => setShowOptions(false)}
     >
       <div 
-        className={`relative max-w-[65%] px-3 py-2 rounded-lg ${
+        className={`relative max-w-[65%] px-3 py-2 rounded-lg transition-colors duration-300 ${
           isCurrentUser 
             ? 'bg-[#dcf8c6] dark:bg-green-700 text-gray-800 dark:text-white ml-12' 
             : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white mr-12'
@@ -66,7 +66,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
         
-        {/* Chat bubble tail */}
         {!isConsecutive && (
           <div 
             className={`absolute ${

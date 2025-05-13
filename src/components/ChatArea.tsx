@@ -30,6 +30,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   theme
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<{ [key: string]: HTMLDivElement }>({});
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
@@ -42,6 +43,17 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const handleMessageDelete = (message: Message) => {
     setSelectedMessage(message);
     setIsDeleteMessageDialogOpen(true);
+  };
+
+  const scrollToMessage = (messageId: string) => {
+    const messageElement = messageRefs.current[messageId];
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      messageElement.classList.add('bg-yellow-100', 'dark:bg-yellow-900');
+      setTimeout(() => {
+        messageElement.classList.remove('bg-yellow-100', 'dark:bg-yellow-900');
+      }, 2000);
+    }
   };
 
   if (!chat) {
@@ -144,14 +156,21 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           const isConsecutive = prevMessage && prevMessage.sender === message.sender;
           
           return (
-            <MessageBubble 
+            <div
               key={message.id}
-              message={message}
-              isCurrentUser={isCurrentUser}
-              sender={sender}
-              isConsecutive={isConsecutive}
-              onDelete={() => handleMessageDelete(message)}
-            />
+              ref={el => {
+                if (el) messageRefs.current[message.id] = el;
+              }}
+              className="transition-colors duration-500"
+            >
+              <MessageBubble 
+                message={message}
+                isCurrentUser={isCurrentUser}
+                sender={sender}
+                isConsecutive={isConsecutive}
+                onDelete={() => handleMessageDelete(message)}
+              />
+            </div>
           );
         })}
         <div ref={messagesEndRef} />
@@ -171,6 +190,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         onClose={() => setIsSearchOpen(false)}
         messages={chat.messages}
         users={users}
+        onScrollToMessage={scrollToMessage}
       />
 
       <DeleteMessageDialog
