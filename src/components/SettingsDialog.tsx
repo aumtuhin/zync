@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Image, Upload } from 'lucide-react';
-import { User, Theme } from '../types';
+import { User, Theme, predefinedBackgrounds } from '../types';
 import ProfilePage from './ProfilePage';
 import PrivacyPage from './PrivacyPage';
 
