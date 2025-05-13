@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import Layout from './components/Layout';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
+import GetStarted from './components/GetStarted';
 import { Chat, Message, User, Theme } from './types';
 import { mockChats, mockUsers, currentUser } from './data/mockData';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [chats, setChats] = useState<Chat[]>(mockChats);
   const [darkMode, setDarkMode] = useState<boolean>(false);
@@ -116,6 +118,10 @@ function App() {
     document.documentElement.style.setProperty('--color-text-secondary', newTheme.textSecondary);
     document.documentElement.style.setProperty('--chat-background', `url(${newTheme.chatBackground})`);
   };
+
+  if (!isAuthenticated) {
+    return <GetStarted onComplete={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className={`h-screen ${darkMode ? 'dark' : ''}`} style={{ backgroundColor: theme.background }}>
