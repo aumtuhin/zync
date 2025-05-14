@@ -14,6 +14,9 @@ export default {
       boxShadow: {
         'message': '0 1px 0.5px rgba(0, 0, 0, 0.13)',
       },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      }
     },
   },
   plugins: [],
