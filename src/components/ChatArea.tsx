@@ -58,16 +58,16 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
   if (!chat) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-[#f0f0f0] dark:bg-gray-850">
+      <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-900/30 dark:via-purple-900/30 dark:to-pink-900/30">
         <div className="text-center p-8 max-w-md">
-          <div className="w-48 h-48 mx-auto mb-6 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+          <div className="w-48 h-48 mx-auto mb-6 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-full flex items-center justify-center backdrop-blur-lg">
             <img 
               src="https://images.pexels.com/photos/4144179/pexels-photo-4144179.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
-              alt="WhatsApp" 
+              alt="ChatterBox" 
               className="w-32 h-32 object-cover rounded-full opacity-50"
             />
           </div>
-          <h2 className="text-2xl font-medium text-gray-800 dark:text-white mb-2">WhatsApp Web</h2>
+          <h2 className="text-2xl font-medium text-gray-800 dark:text-white mb-2">ChatterBox</h2>
           <p className="text-gray-600 dark:text-gray-400">
             Select a chat to start messaging or create a new one.
           </p>
@@ -90,12 +90,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         opacity: 0.2
       }
     : {
-        backgroundColor: '#f0f0f0',
-        opacity: 0.1
+        backgroundImage: 'linear-gradient(to bottom right, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05), rgba(236, 72, 153, 0.05))',
+        opacity: 1
       };
 
   return (
-    <div className="h-full flex flex-col bg-[#e5e5e5] dark:bg-gray-850 relative">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-850 relative">
       <div 
         className="absolute inset-0 pointer-events-none"
         style={chatBackgroundStyle}

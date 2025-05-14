@@ -15,6 +15,25 @@ export interface Theme {
   chatBackground: string;
 }
 
+export interface Message {
+  id: string;
+  content: string;
+  sender: string;
+  timestamp: Date;
+  status: 'sent' | 'delivered' | 'read';
+}
+
+export interface Chat {
+  id: string;
+  participants: string[];
+  messages: Message[];
+  lastMessage?: Message;
+  unreadCount: number;
+  isGroup?: boolean;
+  groupName?: string;
+  groupAvatar?: string;
+}
+
 export const predefinedBackgrounds = [
   'https://images.pexels.com/photos/7130560/pexels-photo-7130560.jpeg',
   'https://images.pexels.com/photos/7130474/pexels-photo-7130474.jpeg',
