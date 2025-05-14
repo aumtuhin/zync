@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Chat, User, Theme } from '../types';
-import { Search, PlusCircle, Settings, Sun, Moon } from 'lucide-react';
+import { Search, PlusCircle, Settings, Sun, Moon, Phone, Video } from 'lucide-react';
 import ChatListItem from './ChatListItem';
 import ProfileHeader from './ProfileHeader';
 import NewChatDialog from './NewChatDialog';
@@ -48,32 +48,54 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800">
-      <ProfileHeader 
-        user={currentUser} 
-        actions={
-          <div className="flex items-center space-x-4">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-4">
+          <div className="relative group cursor-pointer">
+            <img
+              src={currentUser.avatar}
+              alt={currentUser.name}
+              className="w-12 h-12 rounded-full object-cover ring-2 ring-indigo-500/50 transition-all duration-300 group-hover:ring-4"
+            />
+            <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{currentUser.name}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Online</p>
+          </div>
+          <div className="flex items-center space-x-2">
             <button 
               onClick={() => setDarkMode(!darkMode)}
-              className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-full"
+              className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <button 
               onClick={() => setIsSettingsOpen(true)}
-              className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-full"
+              className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             >
               <Settings size={20} />
             </button>
           </div>
-        }
-      />
+        </div>
+        
+        <div className="mt-4 flex space-x-2">
+          <button className="flex-1 flex items-center justify-center py-2 px-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors">
+            <Phone size={18} className="mr-2" />
+            Audio Call
+          </button>
+          <button className="flex-1 flex items-center justify-center py-2 px-4 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors">
+            <Video size={18} className="mr-2" />
+            Video Call
+          </button>
+        </div>
+      </div>
       
       <div className="px-4 py-2">
         <div className="relative">
           <input
             type="text"
             placeholder="Search or start new chat"
-            className="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none"
+            className="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -101,13 +123,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         })}
       </div>
       
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4">
         <button 
           onClick={() => setIsNewChatOpen(true)}
-          className="flex items-center justify-center w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
+          className="flex items-center justify-center w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] hover:shadow-lg"
         >
-          <PlusCircle size={18} className="mr-2" />
-          <span>New Chat</span>
+          <PlusCircle size={20} className="mr-2" />
+          <span className="font-medium">New Chat</span>
         </button>
       </div>
 
