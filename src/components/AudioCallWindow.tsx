@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog } from '@headlessui/react';
-import { Mic, MicOff, PhoneOff } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Minus, X } from 'lucide-react';
 import { User } from '../types';
 
 interface AudioCallWindowProps {
@@ -18,6 +18,11 @@ const AudioCallWindow: React.FC<AudioCallWindowProps> = ({
 }) => {
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [position, setPosition] = useState({ x: window.innerWidth - 420, y: 20 });
+  const dragRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -35,54 +40,130 @@ const AudioCallWindow: React.FC<AudioCallWindowProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="fixed inset-0 z-50 overflow-y-auto"
-    >
-      <div className="flex items-center justify-center min-h-screen">
-        <Dialog.Overlay className="fixed inset-0 bg-black/70" />
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (dragRef.current && e.target === dragRef.current) {
+      isDragging.current = true;
+      dragStart.current = {
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      };
+    }
+  };
 
-        <div className="relative bg-gradient-to-br from-indigo-600 to-purple-700 w-full max-w-sm mx-auto rounded-2xl shadow-2xl overflow-hidden">
-          <div className="p-8">
-            <div className="flex flex-col items-center">
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging.current) {
+      const newX = e.clientX - dragStart.current.x;
+      const newY = e.clientY - dragStart.current.y;
+      
+      // Keep window within viewport bounds
+      const maxX = window.innerWidth - (dragRef.current?.offsetWidth || 0);
+      const maxY = window.innerHeight - (dragRef.current?.offsetHeight || 0);
+      
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed z-50"
+      style={{ left: position.x, top: position.y }}
+    >
+      <div 
+        ref={dragRef}
+        onMouseDown={handleMouseDown}
+        className={`bg-gradient-to-br from-indigo-600 to-purple-700 rounded-lg shadow-2xl overflow-hidden transition-all ${
+          isMinimized ? 'w-64' : 'w-96'
+        }`}
+      >
+        <div className="flex items-center justify-between p-2 bg-black/20 cursor-move">
+          <span className="text-white font-medium">Audio Call</span>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsMinimized(!isMinimized)}
+              className="p-1 hover:bg-white/20 rounded"
+            >
+              <Minus className="text-white" size={16} />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-white/20 rounded"
+            >
+              <X className="text-white" size={16} />
+            </button>
+          </div>
+        </div>
+
+        <div className={`transition-all ${isMinimized ? 'h-16' : 'p-6'}`}>
+          {isMinimized ? (
+            <div className="flex items-center p-2">
               <img
                 src={receiver.avatar}
                 alt={receiver.name}
-                className="w-32 h-32 rounded-full border-4 border-white/20 object-cover"
+                className="w-10 h-10 rounded-full"
               />
-              <h2 className="mt-4 text-2xl font-bold text-white">{receiver.name}</h2>
-              <p className="mt-2 text-white/80">{formatDuration(callDuration)}</p>
+              <div className="ml-3">
+                <p className="text-white text-sm font-medium">{receiver.name}</p>
+                <p className="text-white/80 text-xs">{formatDuration(callDuration)}</p>
+              </div>
             </div>
+          ) : (
+            <>
+              <div className="flex flex-col items-center">
+                <img
+                  src={receiver.avatar}
+                  alt={receiver.name}
+                  className="w-24 h-24 rounded-full border-4 border-white/20"
+                />
+                <h2 className="mt-4 text-xl font-bold text-white">{receiver.name}</h2>
+                <p className="mt-2 text-white/80">{formatDuration(callDuration)}</p>
+              </div>
 
-            <div className="mt-12 flex justify-center space-x-6">
-              <button
-                onClick={() => setIsMuted(!isMuted)}
-                className={`p-4 rounded-full ${
-                  isMuted 
-                    ? 'bg-red-500 hover:bg-red-600' 
-                    : 'bg-white/20 hover:bg-white/30'
-                } transition-colors`}
-              >
-                {isMuted ? (
-                  <MicOff className="text-white" size={24} />
-                ) : (
-                  <Mic className="text-white" size={24} />
-                )}
-              </button>
-              
-              <button
-                onClick={onClose}
-                className="p-4 bg-red-500 hover:bg-red-600 rounded-full transition-colors"
-              >
-                <PhoneOff className="text-white" size={24} />
-              </button>
-            </div>
-          </div>
+              <div className="mt-8 flex justify-center space-x-4">
+                <button
+                  onClick={() => setIsMuted(!isMuted)}
+                  className={`p-3 rounded-full ${
+                    isMuted 
+                      ? 'bg-red-500 hover:bg-red-600' 
+                      : 'bg-white/20 hover:bg-white/30'
+                  } transition-colors`}
+                >
+                  {isMuted ? (
+                    <MicOff className="text-white" size={20} />
+                  ) : (
+                    <Mic className="text-white" size={20} />
+                  )}
+                </button>
+                
+                <button
+                  onClick={onClose}
+                  className="p-3 bg-red-500 hover:bg-red-600 rounded-full transition-colors"
+                >
+                  <PhoneOff className="text-white" size={20} />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
-    </Dialog>
+    </div>
   );
 };
 
