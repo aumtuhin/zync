@@ -9,6 +9,8 @@ import { formatUserLastSeen } from '../utils/dateUtils';
 import DeleteChatDialog from './DeleteChatDialog';
 import MessageSearchDialog from './MessageSearchDialog';
 import DeleteMessageDialog from './DeleteMessageDialog';
+import AudioCallWindow from './AudioCallWindow';
+import VideoCallWindow from './VideoCallWindow';
 
 interface ChatAreaProps {
   chat: Chat | null;
@@ -35,6 +37,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isDeleteMessageDialogOpen, setIsDeleteMessageDialogOpen] = useState(false);
+  const [isAudioCallOpen, setIsAudioCallOpen] = useState(false);
+  const [isVideoCallOpen, setIsVideoCallOpen] = useState(false);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -128,10 +132,16 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             >
               <Search size={20} />
             </button>
-            <button className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full">
+            <button 
+              onClick={() => setIsVideoCallOpen(true)}
+              className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
+            >
               <Video size={20} />
             </button>
-            <button className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full">
+            <button 
+              onClick={() => setIsAudioCallOpen(true)}
+              className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
+            >
               <Phone size={20} />
             </button>
             <button 
@@ -207,6 +217,24 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           setSelectedMessage(null);
         }}
       />
+
+      {otherParticipant && (
+        <>
+          <AudioCallWindow
+            isOpen={isAudioCallOpen}
+            onClose={() => setIsAudioCallOpen(false)}
+            caller={currentUser}
+            receiver={otherParticipant}
+          />
+
+          <VideoCallWindow
+            isOpen={isVideoCallOpen}
+            onClose={() => setIsVideoCallOpen(false)}
+            caller={currentUser}
+            receiver={otherParticipant}
+          />
+        </>
+      )}
     </div>
   );
 };

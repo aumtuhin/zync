@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Chat, User, Theme } from '../types';
-import { Search, PlusCircle, Settings, Sun, Moon, Phone, Video } from 'lucide-react';
+import { Search, PlusCircle, Settings, Sun, Moon } from 'lucide-react';
 import ChatListItem from './ChatListItem';
 import ProfileHeader from './ProfileHeader';
 import NewChatDialog from './NewChatDialog';
@@ -76,17 +76,6 @@ const Sidebar: React.FC<SidebarProps> = ({
               <Settings size={20} />
             </button>
           </div>
-        </div>
-        
-        <div className="mt-4 flex space-x-2">
-          <button className="flex-1 flex items-center justify-center py-2 px-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors">
-            <Phone size={18} className="mr-2" />
-            Audio Call
-          </button>
-          <button className="flex-1 flex items-center justify-center py-2 px-4 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors">
-            <Video size={18} className="mr-2" />
-            Video Call
-          </button>
         </div>
       </div>
       
