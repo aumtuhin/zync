@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Phone, Mail, ArrowRight, User, AtSign } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface GetStartedProps {
-  onComplete: () => void;
-}
-
-const GetStarted: React.FC<GetStartedProps> = ({ onComplete }) => {
+const GetStarted: React.FC = () => {
+  const navigate = useNavigate();
   const [method, setMethod] = useState<'email' | 'phone'>('email');
   const [value, setValue] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -15,6 +13,13 @@ const GetStarted: React.FC<GetStartedProps> = ({ onComplete }) => {
   const [username, setUsername] = useState('');
   
   const otpRefs = Array(6).fill(0).map(() => React.createRef<HTMLInputElement>());
+
+  // Focus first OTP input when step changes to 'otp'
+  useEffect(() => {
+    if (step === 'otp') {
+      otpRefs[0].current?.focus();
+    }
+  }, [step]);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -54,8 +59,17 @@ const GetStarted: React.FC<GetStartedProps> = ({ onComplete }) => {
       return newOtp;
     });
 
+    // Move to next input if value is entered
     if (value && index < 5) {
       otpRefs[index + 1].current?.focus();
+    }
+
+    // Check if OTP is complete
+    if (index === 5 && value) {
+      const isComplete = otp.every((digit, i) => i === 5 ? value : digit);
+      if (isComplete) {
+        setStep('profile');
+      }
     }
   };
 
@@ -79,16 +93,7 @@ const GetStarted: React.FC<GetStartedProps> = ({ onComplete }) => {
       return;
     }
 
-    onComplete();
-  };
-
-  const verifyOtp = () => {
-    const otpValue = otp.join('');
-    if (otpValue.length === 6) {
-      setStep('profile');
-    } else {
-      setError('Please enter a valid OTP');
-    }
+    navigate('/chat');
   };
 
   return (
@@ -204,14 +209,6 @@ const GetStarted: React.FC<GetStartedProps> = ({ onComplete }) => {
                 Resend code
               </button>
             </div>
-
-            <button
-              onClick={verifyOtp}
-              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-purple-600 bg-white hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50 transition-all shadow-lg"
-            >
-              Verify
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </button>
           </div>
         ) : (
           <form className="mt-8 space-y-6 bg-white/10 backdrop-blur-lg p-8 rounded-2xl" onSubmit={handleProfileSubmit}>
