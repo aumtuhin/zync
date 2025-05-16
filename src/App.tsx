@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Layout from './components/Layout';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
-import { Chat, Message, User, Theme } from './types';
+import { Chat, Message, Theme } from './types';
 import { mockChats, mockUsers, currentUser } from './data/mockData';
 
 function App() {
@@ -102,6 +102,9 @@ function App() {
       }
       return chat;
     });
+
+    // todo - handle delete for everyone
+    if(deleteForEveryone) { return}
 
     setChats(updatedChats);
     setActiveChat(updatedChats.find(chat => chat.id === activeChat.id) || null);

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Chat, User, Theme } from '../types';
 import { Search, PlusCircle, Settings, Sun, Moon } from 'lucide-react';
 import ChatListItem from './ChatListItem';
-import ProfileHeader from './ProfileHeader';
 import NewChatDialog from './NewChatDialog';
 import SettingsDialog from './SettingsDialog';
 
@@ -15,6 +14,7 @@ interface SidebarProps {
   darkMode: boolean;
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
   onCreateChat: (userId: string) => void;
+  onDeleteChat: (chatId: string) => void;
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
 }
