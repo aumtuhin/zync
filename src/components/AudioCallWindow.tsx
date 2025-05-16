@@ -21,7 +21,7 @@ const AudioCallWindow: React.FC<AudioCallWindowProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [position, setPosition] = useState({ x: window.innerWidth - 420, y: 20 });
   const dragRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -41,8 +41,8 @@ const AudioCallWindow: React.FC<AudioCallWindowProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (dragRef.current && e.target === dragRef.current) {
-      isDragging.current = true;
+    if (dragRef.current) {
+      setIsDragging(true);
       dragStart.current = {
         x: e.clientX - position.x,
         y: e.clientY - position.y
@@ -51,13 +51,13 @@ const AudioCallWindow: React.FC<AudioCallWindowProps> = ({
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging.current) {
+    if (isDragging && dragRef.current) {
       const newX = e.clientX - dragStart.current.x;
       const newY = e.clientY - dragStart.current.y;
       
       // Keep window within viewport bounds
-      const maxX = window.innerWidth - (dragRef.current?.offsetWidth || 0);
-      const maxY = window.innerHeight - (dragRef.current?.offsetHeight || 0);
+      const maxX = window.innerWidth - dragRef.current.offsetWidth;
+      const maxY = window.innerHeight - dragRef.current.offsetHeight;
       
       setPosition({
         x: Math.max(0, Math.min(newX, maxX)),
@@ -67,17 +67,19 @@ const AudioCallWindow: React.FC<AudioCallWindowProps> = ({
   };
 
   const handleMouseUp = () => {
-    isDragging.current = false;
+    setIsDragging(false);
   };
 
   useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging]);
 
   if (!isOpen) return null;
 
@@ -88,12 +90,14 @@ const AudioCallWindow: React.FC<AudioCallWindowProps> = ({
     >
       <div 
         ref={dragRef}
-        onMouseDown={handleMouseDown}
         className={`bg-gradient-to-br from-indigo-600 to-purple-700 rounded-lg shadow-2xl overflow-hidden transition-all ${
           isMinimized ? 'w-64' : 'w-96'
         }`}
       >
-        <div className="flex items-center justify-between p-2 bg-black/20 cursor-move">
+        <div 
+          className="flex items-center justify-between p-2 bg-black/20 cursor-move"
+          onMouseDown={handleMouseDown}
+        >
           <span className="text-white font-medium">Audio Call</span>
           <div className="flex items-center space-x-2">
             <button
