@@ -8,7 +8,7 @@ interface MessageBubbleProps {
   message: Message;
   isCurrentUser: boolean;
   sender?: User;
-  isConsecutive: boolean;
+  isConsecutive: boolean | null;
   onDelete: () => void;
 }
 

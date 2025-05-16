@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface StatusDotProps {
-  status: 'online' | 'offline';
+  status: 'online' | 'offline' | 'away';
   className?: string;
 }
 

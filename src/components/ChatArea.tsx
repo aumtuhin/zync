@@ -67,11 +67,11 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           <div className="w-48 h-48 mx-auto mb-6 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-full flex items-center justify-center backdrop-blur-lg">
             <img 
               src="https://images.pexels.com/photos/4144179/pexels-photo-4144179.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
-              alt="ChatterBox" 
+              alt="Zync" 
               className="w-32 h-32 object-cover rounded-full opacity-50"
             />
           </div>
-          <h2 className="text-2xl font-medium text-gray-800 dark:text-white mb-2">ChatterBox</h2>
+          <h2 className="text-2xl font-medium text-gray-800 dark:text-white mb-2">Zync</h2>
           <p className="text-gray-600 dark:text-gray-400">
             Select a chat to start messaging or create a new one.
           </p>
