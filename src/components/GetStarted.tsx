@@ -101,7 +101,7 @@ const GetStarted: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-4xl font-extrabold text-white">
-            ChatterBox
+          Zync
           </h2>
           <p className="mt-2 text-sm text-white/80">
             {step === 'input' 
