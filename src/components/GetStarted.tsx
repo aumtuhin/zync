@@ -1,119 +1,231 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Phone, Mail, ArrowRight, User, AtSign } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState, useEffect } from 'react'
+import { Phone, Mail, ArrowRight, User, AtSign } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import {
+  useRequestEmailOTP,
+  useRequestSmsOTP,
+  useVerifyEmailOTP,
+  useVerifySmsOTP
+} from '../hooks/useOTP'
+import { useCompleteProfile, useProfile } from '../hooks/useProfile'
+import { isTokenValid, tokenStorage } from '../utils/auth.utils'
 
 const GetStarted: React.FC = () => {
-  const navigate = useNavigate();
-  const [method, setMethod] = useState<'email' | 'phone'>('email');
-  const [value, setValue] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [step, setStep] = useState<'input' | 'otp' | 'profile'>('input');
-  const [error, setError] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
-  
-  const otpRefs = Array(6).fill(0).map(() => React.createRef<HTMLInputElement>());
+  const { mutate: mutateRequestEmailOtp } = useRequestEmailOTP()
+  const { mutate: mutateRequestSmsOtp } = useRequestSmsOTP()
+  const { mutate: mutateVerifyEmailOtp, isPending: isVerifyEmailOtpPending } = useVerifyEmailOTP()
+  const { mutate: mutateVerifySmsOtp } = useVerifySmsOTP()
+  const { mutate: mutateCompleteProfile } = useCompleteProfile()
+  const { data: response } = useProfile()
+
+  const navigate = useNavigate()
+  const [method, setMethod] = useState<'email' | 'phone'>('email')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [step, setStep] = useState<'input' | 'otp' | 'profile'>('input')
+  const [error, setError] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [username, setUsername] = useState('')
+
+  useEffect(() => {
+    const token = isTokenValid()
+    if (token && !response?.data.user.isProfileCompleted) {
+      setStep('profile')
+    }
+    if (token && response?.data.user.isProfileCompleted) {
+      navigate('/chat')
+    }
+  }, [response, step])
+
+  const otpRefs = Array(6)
+    .fill(0)
+    .map(() => React.createRef<HTMLInputElement>())
 
   // Focus first OTP input when step changes to 'otp'
   useEffect(() => {
     if (step === 'otp') {
-      otpRefs[0].current?.focus();
+      otpRefs[0].current?.focus()
     }
-  }, [step]);
+  }, [step])
 
   const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
 
   const validatePhone = (phone: string) => {
-    return /^\+?[\d\s-]{10,}$/.test(phone);
-  };
+    return /^\+?[\d\s-]{10,}$/.test(phone)
+  }
 
   const validateUsername = (username: string) => {
-    return /^[a-zA-Z0-9_]{3,15}$/.test(username);
-  };
+    return /^[a-zA-Z0-9_]{3,15}$/.test(username)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault()
+    setError('')
 
-    if (method === 'email' && !validateEmail(value)) {
-      setError('Please enter a valid email address');
-      return;
+    if (method === 'email' && !validateEmail(email)) {
+      setError('Please enter a valid email address')
+      return
     }
 
-    if (method === 'phone' && !validatePhone(value)) {
-      setError('Please enter a valid phone number');
-      return;
+    if (method === 'email') {
+      mutateRequestEmailOtp(
+        { email },
+        {
+          onSuccess: () => {
+            setError('')
+            setStep('otp')
+          },
+          onError: () => {
+            setError('Something went wrong! Please try again.')
+          }
+        }
+      )
     }
 
-    setStep('otp');
-  };
+    if (method === 'phone' && !validatePhone(phone)) {
+      setError('Please enter a valid phone number')
+      return
+    }
+
+    if (method === 'phone') {
+      mutateRequestSmsOtp(
+        { phone },
+        {
+          onSuccess: () => {
+            setError('')
+            setStep('otp')
+          },
+          onError: () => {
+            setError('Something went wrong! Please try again.')
+          }
+        }
+      )
+    }
+  }
 
   const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) value = value[0];
-    
-    setOtp(prev => {
-      const newOtp = [...prev];
-      newOtp[index] = value;
-      return newOtp;
-    });
+    if (value.length > 1) value = value[0]
+
+    setOtp((prev) => {
+      const newOtp = [...prev]
+      newOtp[index] = value
+      if (index === 5 && value) {
+        const otpValue = newOtp.join('')
+        if (method === 'email') {
+          mutateVerifyEmailOtp(
+            { email, otp: otpValue },
+            {
+              onSuccess: (response: any) => {
+                if (response) {
+                  tokenStorage.setToken(response.data.token as string)
+                  setError('')
+                  setStep('profile')
+                } else {
+                  setError('Something went wrong. Please try again.')
+                }
+              },
+              onError: (error: any) => {
+                setError(error.response.data.message)
+              }
+            }
+          )
+        } else if (method === 'phone') {
+          mutateVerifySmsOtp(
+            { phone, otp: otpValue },
+            {
+              onSuccess: (response: any) => {
+                if (response) {
+                  tokenStorage.setToken(response.data.token as string)
+                  setError('')
+                  setStep('profile')
+                } else {
+                  setError('Something went wrong. Please try again.')
+                }
+              }
+            }
+          )
+        }
+      }
+      return newOtp
+    })
 
     // Move to next input if value is entered
     if (value && index < 5) {
-      otpRefs[index + 1].current?.focus();
+      otpRefs[index + 1].current?.focus()
     }
-
-    // Check if OTP is complete
-    if (index === 5 && value) {
-      const isComplete = otp.every((digit, i) => i === 5 ? value : digit);
-      if (isComplete) {
-        setStep('profile');
-      }
-    }
-  };
+  }
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs[index - 1].current?.focus();
+    if (e.key === 'Backspace') {
+      // If current input is empty OR we're deleting the last character
+      if (!otp[index] && index > 0) {
+        // Focus previous input
+        otpRefs[index - 1].current?.focus()
+        // Optional: Clear the previous input value
+        setOtp((prev) => {
+          const newOtp = [...prev]
+          newOtp[index - 1] = ''
+          return newOtp
+        })
+      }
     }
-  };
+  }
 
   const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault()
+    setError('')
 
     if (!fullName.trim()) {
-      setError('Please enter your full name');
-      return;
+      setError('Please enter your full name')
+      return
     }
 
     if (!validateUsername(username)) {
-      setError('Username must be 3-15 characters long and can only contain letters, numbers, and underscores');
-      return;
+      setError(
+        'Username must be 3-15 characters long and can only contain letters, numbers, and underscores'
+      )
+      return
     }
 
-    navigate('/chat');
-  };
+    mutateCompleteProfile(
+      { fullName, username },
+      {
+        onSuccess: (data: any) => {
+          setError('')
+          if (data.data.success) navigate('/chat')
+        },
+        onError: (error: any) => {
+          console.error('Error completing profile:', error.response.data.message)
+          setError(error.response.data.message)
+        }
+      }
+    )
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 px-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="mt-6 text-4xl font-extrabold text-white">
-          Zync
-          </h2>
+          <h2 className="mt-6 text-4xl font-extrabold text-white">Zync</h2>
           <p className="mt-2 text-sm text-white/80">
-            {step === 'input' 
+            {step === 'input'
               ? 'Enter your email or phone number to get started'
               : step === 'otp'
-              ? 'Enter the verification code we sent you'
-              : 'Complete your profile'}
+                ? 'Enter the verification code we sent you'
+                : 'Complete your profile'}
           </p>
         </div>
 
         {step === 'input' ? (
-          <form className="mt-8 space-y-6 bg-white/10 backdrop-blur-lg p-8 rounded-2xl" onSubmit={handleSubmit}>
+          <form
+            className="mt-8 space-y-6 bg-white/10 backdrop-blur-lg p-8 rounded-2xl"
+            onSubmit={handleSubmit}
+          >
             <div className="space-y-4">
               <div className="flex justify-center space-x-4">
                 <button
@@ -149,19 +261,19 @@ const GetStarted: React.FC = () => {
                 <input
                   id="contact"
                   name="contact"
-                  type={method === 'email' ? 'email' : 'tel'}
+                  type={method === 'email' ? 'email' : 'phone'}
                   required
                   className="appearance-none relative block w-full px-3 py-2 border border-white/20 placeholder-white/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent sm:text-sm bg-white/10 backdrop-blur-lg"
                   placeholder={method === 'email' ? 'Email address' : 'Phone number'}
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
+                  value={method === 'email' ? email : phone}
+                  onChange={(e) =>
+                    method === 'email' ? setEmail(e.target.value) : setPhone(e.target.value)
+                  }
                 />
               </div>
             </div>
 
-            {error && (
-              <p className="text-red-300 text-sm text-center">{error}</p>
-            )}
+            {error && <p className="text-red-300 text-sm text-center">{error}</p>}
 
             <div>
               <button
@@ -190,31 +302,34 @@ const GetStarted: React.FC = () => {
               ))}
             </div>
 
-            {error && (
-              <p className="text-red-300 text-sm text-center">{error}</p>
+            {error && <p className="text-red-300 text-sm text-center">{error}</p>}
+            {isVerifyEmailOtpPending && (
+              <p className="text-white/80 text-sm text-center">Verifying...</p>
             )}
 
             <div className="flex justify-between items-center text-sm">
-              <button 
+              <button
                 type="button"
                 onClick={() => setStep('input')}
                 className="text-white/80 hover:text-white"
               >
                 Change {method}
               </button>
-              <button 
-                type="button"
-                className="text-white/80 hover:text-white"
-              >
+              <button type="button" className="text-white/80 hover:text-white">
                 Resend code
               </button>
             </div>
           </div>
         ) : (
-          <form className="mt-8 space-y-6 bg-white/10 backdrop-blur-lg p-8 rounded-2xl" onSubmit={handleProfileSubmit}>
+          <form
+            className="mt-8 space-y-6 bg-white/10 backdrop-blur-lg p-8 rounded-2xl"
+            onSubmit={handleProfileSubmit}
+          >
             <div className="space-y-4">
               <div>
-                <label htmlFor="fullName" className="sr-only">Full Name</label>
+                <label htmlFor="fullName" className="sr-only">
+                  Full Name
+                </label>
                 <div className="relative">
                   <User className="absolute left-3 top-2.5 text-white/60" size={20} />
                   <input
@@ -230,7 +345,9 @@ const GetStarted: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="username" className="sr-only">Username</label>
+                <label htmlFor="username" className="sr-only">
+                  Username
+                </label>
                 <div className="relative">
                   <AtSign className="absolute left-3 top-2.5 text-white/60" size={20} />
                   <input
@@ -246,9 +363,7 @@ const GetStarted: React.FC = () => {
               </div>
             </div>
 
-            {error && (
-              <p className="text-red-300 text-sm text-center">{error}</p>
-            )}
+            {error && <p className="text-red-300 text-sm text-center">{error}</p>}
 
             <button
               type="submit"
@@ -261,7 +376,7 @@ const GetStarted: React.FC = () => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default GetStarted;
+export default GetStarted

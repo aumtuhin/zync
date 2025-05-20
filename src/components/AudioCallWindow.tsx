@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog } from '@headlessui/react';
 import { Mic, MicOff, PhoneOff, Minus, X } from 'lucide-react';
 import { User } from '../types';
 
@@ -13,7 +12,6 @@ interface AudioCallWindowProps {
 const AudioCallWindow: React.FC<AudioCallWindowProps> = ({
   isOpen,
   onClose,
-  caller,
   receiver
 }) => {
   const [callDuration, setCallDuration] = useState(0);
@@ -79,7 +77,7 @@ const AudioCallWindow: React.FC<AudioCallWindowProps> = ({
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging]);
+  }, [handleMouseMove, isDragging]);
 
   if (!isOpen) return null;
 

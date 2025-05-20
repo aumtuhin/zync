@@ -1,18 +1,20 @@
-import React, { useState, useRef } from 'react';
-import { Dialog } from '@headlessui/react';
-import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Image, Upload } from 'lucide-react';
-import { User, Theme, predefinedBackgrounds } from '../types';
-import ProfileDialog from './ProfileDialog';
-import PrivacyDialog from './PrivacyDialog';
+import React, { useState, useRef } from 'react'
+import { Dialog } from '@headlessui/react'
+import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Upload } from 'lucide-react'
+import { User, Theme, predefinedBackgrounds } from '../types'
+import { User as ZUser } from '../hooks/useProfile'
+import ProfileDialog from './ProfileDialog'
+import PrivacyDialog from './PrivacyDialog'
 
 interface SettingsDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  currentUser: User;
-  darkMode: boolean;
-  setDarkMode: (value: boolean) => void;
-  theme: Theme;
-  onThemeChange: (theme: Theme) => void;
+  isOpen: boolean
+  onClose: () => void
+  currentUser: User
+  user: ZUser
+  darkMode: boolean
+  setDarkMode: (value: boolean) => void
+  theme: Theme
+  onThemeChange: (theme: Theme) => void
 }
 
 const defaultTheme: Theme = {
@@ -22,51 +24,48 @@ const defaultTheme: Theme = {
   textPrimary: '#000000',
   textSecondary: '#667781',
   chatBackground: ''
-};
+}
 
-type Page = 'settings' | 'theme' | 'profile' | 'privacy';
+type Page = 'settings' | 'theme' | 'profile' | 'privacy'
 
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
   isOpen,
   onClose,
   currentUser,
+  user,
   darkMode,
   setDarkMode,
   theme = defaultTheme,
-  onThemeChange,
+  onThemeChange
 }) => {
-  const [currentPage, setCurrentPage] = useState<Page>('settings');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<Page>('settings')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false)
 
   const handleColorChange = (key: keyof Theme, value: string) => {
-    onThemeChange({ ...theme, [key]: value });
-  };
+    onThemeChange({ ...theme, [key]: value })
+  }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
     if (file) {
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onload = (e) => {
-        const result = e.target?.result as string;
-        handleColorChange('chatBackground', result);
-      };
-      reader.readAsDataURL(file);
+        const result = e.target?.result as string
+        handleColorChange('chatBackground', result)
+      }
+      reader.readAsDataURL(file)
     }
-  };
+  }
 
   const handleResetBackground = () => {
-    handleColorChange('chatBackground', '');
-  };
+    handleColorChange('chatBackground', '')
+  }
 
   return (
     <>
-      <Dialog
-        open={isOpen}
-        onClose={onClose}
-        className="fixed inset-0 z-50 overflow-y-auto"
-      >
+      <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex items-center justify-center min-h-screen">
           <Dialog.Overlay className="fixed inset-0 bg-black/30" />
 
@@ -85,13 +84,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
             {currentPage === 'theme' ? (
               <div className="p-4 space-y-4">
-                <button
-                  onClick={() => setCurrentPage('settings')}
-                  className="text-blue-500 mb-4"
-                >
+                <button onClick={() => setCurrentPage('settings')} className="text-blue-500 mb-4">
                   ← Back to Settings
                 </button>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -167,7 +163,11 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                               theme.chatBackground === bg ? 'border-blue-500' : 'border-transparent'
                             }`}
                           >
-                            <img src={bg} alt={`Background ${index + 1}`} className="w-full h-full object-cover" />
+                            <img
+                              src={bg}
+                              alt={`Background ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
                           </button>
                         ))}
                       </div>
@@ -201,22 +201,20 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               <div className="p-4 space-y-4">
                 <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-750 rounded-lg">
                   <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
+                    src={user.avatar}
+                    alt={user.fullName}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                   <div className="ml-4">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                      {currentUser.name}
+                      {user.fullName}
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Online
-                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Online</p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <button 
+                  <button
                     onClick={() => setIsProfileOpen(true)}
                     className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
@@ -229,7 +227,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     <span className="ml-3 text-gray-800 dark:text-white">Notifications</span>
                   </button>
 
-                  <button 
+                  <button
                     onClick={() => setIsPrivacyOpen(true)}
                     className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
@@ -260,7 +258,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       </span>
                     </div>
                     <div className="relative">
-                      <div className={`w-10 h-6 rounded-full ${darkMode ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      <div
+                        className={`w-10 h-6 rounded-full ${darkMode ? 'bg-green-500' : 'bg-gray-300'}`}
+                      >
                         <div
                           className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transform transition-transform ${
                             darkMode ? 'translate-x-4' : ''
@@ -288,7 +288,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         user={currentUser}
       />
     </>
-  );
-};
+  )
+}
 
-export default SettingsDialog;
+export default SettingsDialog

@@ -1,23 +1,35 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import App from './App.tsx';
-import GetStarted from './components/GetStarted.tsx';
-import './index.css';
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+
+import App from './App.tsx'
+import GetStarted from './components/GetStarted.tsx'
+import ProtectedRoute from './components/ProtectedRoute.tsx'
+
+const queryClient = new QueryClient()
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+import './index.css'
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <GetStarted />,
+    element: <GetStarted />
   },
   {
     path: '/chat',
-    element: <App />,
-  },
-]);
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    )
+  }
+])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider future={{ v7_startTransition: true }} router={router} />
+    </QueryClientProvider>
   </StrictMode>
-);
+)

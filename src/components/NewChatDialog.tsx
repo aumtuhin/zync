@@ -1,37 +1,28 @@
-import React, { useState } from 'react';
-import { Dialog } from '@headlessui/react';
-import { Search, X } from 'lucide-react';
-import { User } from '../types';
-import StatusDot from './StatusDot';
+import React, { useState } from 'react'
+import { Dialog } from '@headlessui/react'
+import { Search, X } from 'lucide-react'
+import { User as ZUser } from '../hooks/useProfile'
+import StatusDot from './StatusDot'
 
 interface NewChatDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  users: User[];
-  currentUser: User;
-  onCreateChat: (userId: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  contacts: ZUser[]
+  onCreateChat: (userId: string) => void
 }
 
 const NewChatDialog: React.FC<NewChatDialogProps> = ({
   isOpen,
   onClose,
-  users,
-  currentUser,
-  onCreateChat,
+  contacts,
+  onCreateChat
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const filteredUsers = users.filter(user => 
-    user.id !== currentUser.id &&
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [searchQuery, setSearchQuery] = useState('')
+
+  console.log('contacts', contacts)
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="fixed inset-0 z-50 overflow-y-auto"
-    >
+    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen">
         <Dialog.Overlay className="fixed inset-0 bg-black/30" />
 
@@ -57,34 +48,35 @@ const NewChatDialog: React.FC<NewChatDialogProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Search className="absolute left-3 top-2.5 text-gray-500 dark:text-gray-400" size={18} />
+              <Search
+                className="absolute left-3 top-2.5 text-gray-500 dark:text-gray-400"
+                size={18}
+              />
             </div>
 
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {filteredUsers.map(user => (
+              {contacts.map((contact) => (
                 <button
-                  key={user.id}
+                  key={contact._id}
                   onClick={() => {
-                    onCreateChat(user.id);
-                    onClose();
+                    onCreateChat(contact._id)
+                    onClose()
                   }}
                   className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <div className="relative">
                     <img
-                      src={user.avatar}
-                      alt={user.name}
+                      src={contact.avatar}
+                      alt={contact.fullName}
                       className="w-12 h-12 rounded-full object-cover"
                     />
-                    <StatusDot status={user.status} className="absolute bottom-0 right-0" />
+                    <StatusDot status="offline" className="absolute bottom-0 right-0" />
                   </div>
                   <div className="ml-3 text-left">
                     <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                      {user.name}
+                      {contact.fullName}
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {user.status === 'online' ? 'online' : 'offline'}
-                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">offline</p>
                   </div>
                 </button>
               ))}
@@ -93,7 +85,7 @@ const NewChatDialog: React.FC<NewChatDialogProps> = ({
         </div>
       </div>
     </Dialog>
-  );
-};
+  )
+}
 
-export default NewChatDialog;
+export default NewChatDialog

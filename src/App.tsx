@@ -1,157 +1,175 @@
-import { useState } from 'react';
-import Layout from './components/Layout';
-import Sidebar from './components/Sidebar';
-import ChatArea from './components/ChatArea';
-import { Chat, Message, Theme } from './types';
-import { mockChats, mockUsers, currentUser } from './data/mockData';
+import { useState } from 'react'
+import Layout from './components/Layout'
+import Sidebar from './components/Sidebar'
+import ChatArea from './components/ChatArea'
+import { Chat, Message, Theme } from './types'
+import { mockChats, mockUsers, currentUser } from './data/mockData'
+import { chatTheme } from './theme/chat'
+import { useProfile } from './hooks/useProfile'
+import { useContacts } from './hooks/useContact'
 
 function App() {
-  const [activeChat, setActiveChat] = useState<Chat | null>(null);
-  const [chats, setChats] = useState<Chat[]>(mockChats);
-  const [darkMode, setDarkMode] = useState<boolean>(false);
-  const [theme, setTheme] = useState<Theme>({
-    primary: '#25D366',
-    secondary: '#128C7E',
-    background: '#FFFFFF',
-    textPrimary: '#000000',
-    textSecondary: '#667781',
-    chatBackground: 'https://images.pexels.com/photos/7130498/pexels-photo-7130498.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
-  });
+  const [activeChat, setActiveChat] = useState<Chat | null>(null)
+  const [chats, setChats] = useState<Chat[]>(mockChats)
+  const [darkMode, setDarkMode] = useState<boolean>(false)
+  const [theme, setTheme] = useState<Theme>(chatTheme)
+  const { data: response, isPending } = useProfile()
+  const { data: contactsResponse } = useContacts()
+
+  console.log('contactsResponse', contactsResponse)
+
+  const user = response?.data.user
+
+  const contacts = contactsResponse?.data.contacts || []
 
   const handleSendMessage = (content: string) => {
-    if (!activeChat) return;
-    
+    if (!activeChat) return
+
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
       content,
       sender: currentUser.id,
       timestamp: new Date(),
-      status: 'sent',
-    };
+      status: 'sent'
+    }
 
-    const updatedChats = chats.map(chat => {
+    const updatedChats = chats.map((chat) => {
       if (chat.id === activeChat.id) {
         return {
           ...chat,
           messages: [...chat.messages, newMessage],
-          lastMessage: newMessage,
-        };
+          lastMessage: newMessage
+        }
       }
-      return chat;
-    });
+      return chat
+    })
 
-    setChats(updatedChats);
-    setActiveChat(updatedChats.find(chat => chat.id === activeChat.id) || null);
-  };
+    setChats(updatedChats)
+    setActiveChat(updatedChats.find((chat) => chat.id === activeChat.id) || null)
+  }
 
   const handleChatSelect = (chatId: string) => {
-    const selected = chats.find(chat => chat.id === chatId) || null;
+    const selected = chats.find((chat) => chat.id === chatId) || null
     if (selected && selected.unreadCount) {
-      const updatedChats = chats.map(chat => 
+      const updatedChats = chats.map((chat) =>
         chat.id === chatId ? { ...chat, unreadCount: 0 } : chat
-      );
-      setChats(updatedChats);
-      setActiveChat({ ...selected, unreadCount: 0 });
+      )
+      setChats(updatedChats)
+      setActiveChat({ ...selected, unreadCount: 0 })
     } else {
-      setActiveChat(selected);
+      setActiveChat(selected)
     }
-  };
+  }
 
   const handleCreateChat = (userId: string) => {
-    const existingChat = chats.find(chat => 
-      !chat.isGroup && 
-      chat.participants.includes(userId) && 
-      chat.participants.includes(currentUser.id)
-    );
+    const existingChat = chats.find(
+      (chat) =>
+        !chat.isGroup &&
+        chat.participants.includes(userId) &&
+        chat.participants.includes(currentUser.id)
+    )
 
     if (existingChat) {
-      setActiveChat(existingChat);
-      return;
+      setActiveChat(existingChat)
+      return
     }
 
     const newChat: Chat = {
       id: `chat-${Date.now()}`,
       participants: [currentUser.id, userId],
       messages: [],
-      unreadCount: 0,
-    };
+      unreadCount: 0
+    }
 
-    setChats([newChat, ...chats]);
-    setActiveChat(newChat);
-  };
+    setChats([newChat, ...chats])
+    setActiveChat(newChat)
+  }
 
   const handleDeleteChat = (chatId: string) => {
-    const updatedChats = chats.filter(chat => chat.id !== chatId);
-    setChats(updatedChats);
+    const updatedChats = chats.filter((chat) => chat.id !== chatId)
+    setChats(updatedChats)
     if (activeChat?.id === chatId) {
-      setActiveChat(null);
+      setActiveChat(null)
     }
-  };
+  }
 
   const handleDeleteMessage = (messageId: string, deleteForEveryone: boolean) => {
-    if (!activeChat) return;
+    if (!activeChat) return
 
-    const updatedChats = chats.map(chat => {
+    const updatedChats = chats.map((chat) => {
       if (chat.id === activeChat.id) {
-        const updatedMessages = chat.messages.filter(msg => msg.id !== messageId);
+        const updatedMessages = chat.messages.filter((msg) => msg.id !== messageId)
         return {
           ...chat,
           messages: updatedMessages,
-          lastMessage: updatedMessages[updatedMessages.length - 1] || null,
-        };
+          lastMessage: updatedMessages[updatedMessages.length - 1] || null
+        }
       }
-      return chat;
-    });
+      return chat
+    })
 
     // todo - handle delete for everyone
-    if(deleteForEveryone) { return}
+    if (deleteForEveryone) {
+      return
+    }
 
-    setChats(updatedChats);
-    setActiveChat(updatedChats.find(chat => chat.id === activeChat.id) || null);
-  };
+    setChats(updatedChats)
+    setActiveChat(updatedChats.find((chat) => chat.id === activeChat.id) || null)
+  }
 
   const handleThemeChange = (newTheme: Theme) => {
-    setTheme(newTheme);
-    document.documentElement.style.setProperty('--color-primary', newTheme.primary);
-    document.documentElement.style.setProperty('--color-secondary', newTheme.secondary);
-    document.documentElement.style.setProperty('--color-background', newTheme.background);
-    document.documentElement.style.setProperty('--color-text-primary', newTheme.textPrimary);
-    document.documentElement.style.setProperty('--color-text-secondary', newTheme.textSecondary);
-    document.documentElement.style.setProperty('--chat-background', `url(${newTheme.chatBackground})`);
-  };
+    setTheme(newTheme)
+    document.documentElement.style.setProperty('--color-primary', newTheme.primary)
+    document.documentElement.style.setProperty('--color-secondary', newTheme.secondary)
+    document.documentElement.style.setProperty('--color-background', newTheme.background)
+    document.documentElement.style.setProperty('--color-text-primary', newTheme.textPrimary)
+    document.documentElement.style.setProperty('--color-text-secondary', newTheme.textSecondary)
+    document.documentElement.style.setProperty(
+      '--chat-background',
+      `url(${newTheme.chatBackground})`
+    )
+  }
 
   return (
-    <div className={`h-screen ${darkMode ? 'dark' : ''}`} style={{ backgroundColor: theme.background }}>
-      <Layout 
-        sidebar={
-          <Sidebar 
-            chats={chats} 
-            users={mockUsers} 
-            currentUser={currentUser} 
-            onChatSelect={handleChatSelect}
-            activeChat={activeChat}
-            darkMode={darkMode}
-            setDarkMode={setDarkMode}
-            onCreateChat={handleCreateChat}
-            onDeleteChat={handleDeleteChat}
-            theme={theme}
-            onThemeChange={handleThemeChange}
-          />
-        }
-        content={
-          <ChatArea 
-            chat={activeChat} 
-            users={mockUsers}
-            currentUser={currentUser}
-            onSendMessage={handleSendMessage}
-            onDeleteChat={handleDeleteChat}
-            onDeleteMessage={handleDeleteMessage}
-            theme={theme}
-          />
-        }
-      />
+    <div
+      className={`h-screen ${darkMode ? 'dark' : ''}`}
+      style={{ backgroundColor: theme.background }}
+    >
+      {isPending && <div className="loading">Loading...</div>}
+      {!isPending && user && contacts && (
+        <Layout
+          sidebar={
+            <Sidebar
+              chats={chats}
+              users={mockUsers}
+              currentUser={currentUser}
+              user={user}
+              contacts={contacts}
+              onChatSelect={handleChatSelect}
+              activeChat={activeChat}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
+              onCreateChat={handleCreateChat}
+              onDeleteChat={handleDeleteChat}
+              theme={theme}
+              onThemeChange={handleThemeChange}
+            />
+          }
+          content={
+            <ChatArea
+              chat={activeChat}
+              users={mockUsers}
+              currentUser={currentUser}
+              onSendMessage={handleSendMessage}
+              onDeleteChat={handleDeleteChat}
+              onDeleteMessage={handleDeleteMessage}
+              theme={theme}
+            />
+          }
+        />
+      )}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
