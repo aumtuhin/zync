@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { addContact, getContacts } from '../api/contact'
+import { addContact, getContacts } from '../../api/contact'
 
 export const useAddContact = () => {
   return useMutation({

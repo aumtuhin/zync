@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react'
 import { Dialog } from '@headlessui/react'
 import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Upload } from 'lucide-react'
 import { User, Theme, predefinedBackgrounds } from '../types'
-import { User as ZUser } from '../hooks/useProfile'
+import { User as ZUser } from '../hooks/queries/useProfile'
 import ProfileDialog from './ProfileDialog'
 import PrivacyDialog from './PrivacyDialog'
 

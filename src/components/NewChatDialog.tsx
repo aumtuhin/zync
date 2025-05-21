@@ -2,13 +2,13 @@ import React, { useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { Search, X } from 'lucide-react'
 import StatusDot from './StatusDot'
-import { Contact } from '../hooks/useProfile'
+import { Contact, User } from '../types/index'
 
 interface NewChatDialogProps {
   isOpen: boolean
   onClose: () => void
   contacts: Contact[]
-  onCreateChat: (userId: string) => void
+  onCreateChat: (recipient: User) => void
 }
 
 const NewChatDialog: React.FC<NewChatDialogProps> = ({
@@ -57,7 +57,7 @@ const NewChatDialog: React.FC<NewChatDialogProps> = ({
                 <button
                   key={contact?._id}
                   onClick={() => {
-                    onCreateChat(contact._id)
+                    onCreateChat(contact.recipient)
                     onClose()
                   }}
                   className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"

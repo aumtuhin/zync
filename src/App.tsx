@@ -6,33 +6,70 @@ import ChatArea from './components/ChatArea'
 import { Chat, Message, Theme } from './types'
 import { mockChats, mockUsers, currentUser } from './data/mockData'
 import { chatTheme } from './theme/chat'
-import { Contact, useProfile } from './hooks/useProfile'
-import { useAddContact } from './hooks/useContact'
+import { useProfile } from './hooks/queries/useProfile'
+import { Contact, Conversation, User } from './types/index'
+import { useAddContact } from './hooks/queries/useContact'
+import { useCreateConversation } from './hooks/queries/useChat'
 
 function App() {
   const { mutate: mutateAddContact } = useAddContact()
+  const { mutate: mutateCreateConversation } = useCreateConversation()
   const { data: response, isPending } = useProfile()
 
   const [activeChat, setActiveChat] = useState<Chat | null>(null)
+  const [activeConversationRecipient, setActiveConversationRecipient] = useState<User | null>(null)
   const [chats, setChats] = useState<Chat[]>(mockChats)
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [theme, setTheme] = useState<Theme>(chatTheme)
 
   const user = response?.data.user
   const userContacts = useMemo(() => response?.data?.contacts || [], [response?.data?.contacts])
+  const userConversations = useMemo(
+    () => response?.data?.conversations || [],
+    [response?.data?.conversations]
+  )
 
   const [contacts, setContacts] = useState<Contact[]>([])
+  const [conversations, setConversations] = useState<Conversation[]>([])
   const [contactError, setContactError] = useState<string>('')
   const [contactSuccess, setContactSuccess] = useState<string>('')
 
+  console.log('conversations', conversations)
+
   useEffect(() => {
-    if (userContacts.length > 0) {
+    if (response?.success) {
       setContacts(userContacts)
+      setConversations(userConversations)
     }
-  }, [userContacts])
+  }, [response?.success, userContacts, userConversations])
 
   const handleSendMessage = (content: string) => {
     if (!activeChat) return
+
+    if (activeConversationRecipient?._id) {
+      mutateCreateConversation(
+        { recipientId: activeConversationRecipient._id, content: content },
+        {
+          onSuccess: (data) => {
+            // Update the local state with the new conversation
+            // remove locally stored conversation
+            const updatedConversations = conversations.filter(
+              (conversation) => conversation._id !== activeConversationRecipient._id
+            )
+            setConversations(updatedConversations)
+            setConversations((prevConversations) => [
+              data.data.conversation,
+              ...prevConversations.filter(
+                (conversation) => conversation._id !== activeConversationRecipient._id
+              )
+            ])
+          },
+          onError: (error) => {
+            console.error('Error creating conversation:', error)
+          }
+        }
+      )
+    }
 
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
@@ -70,23 +107,35 @@ function App() {
     }
   }
 
-  const handleCreateChat = (userId: string) => {
-    console.log('Creating chat with user:', userId)
-    const existingChat = chats.find(
-      (chat) =>
-        !chat.isGroup &&
-        chat.participants.includes(userId) &&
-        chat.participants.includes(currentUser.id)
+  const handleCreateChat = (recipient: User) => {
+    const existingChat = conversations.find((chat) =>
+      chat.participants.some((participant) => participant._id === recipient._id)
     )
 
     if (existingChat) {
-      setActiveChat(existingChat)
+      setConversations((prevConversations) => [
+        existingChat,
+        ...prevConversations.filter((chat) => chat._id !== existingChat._id)
+      ])
+      setActiveConversationRecipient(recipient)
       return
+    }
+
+    if (!existingChat && user) {
+      const newConversation = {
+        _id: recipient._id,
+        participants: [user, recipient],
+        messages: [],
+        unreadCount: null,
+        lastMessage: ''
+      }
+      setConversations((prevConversations) => [newConversation, ...prevConversations])
+      setActiveConversationRecipient(recipient)
     }
 
     const newChat: Chat = {
       id: `chat-${Date.now()}`,
-      participants: [currentUser.id, userId],
+      participants: [currentUser.id, recipient._id],
       messages: [],
       unreadCount: 0
     }
@@ -184,6 +233,7 @@ function App() {
               onThemeChange={handleThemeChange}
               contactError={contactError}
               contactSuccess={contactSuccess}
+              conversations={conversations}
             />
           }
           content={

@@ -1,42 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { completeProfile, getProfile } from '../api/profile'
+import { completeProfile, getProfile } from '../../api/profile'
+import { ProfileResponse } from '../../types/index'
 
 export const useCompleteProfile = () => {
   return useMutation({
     mutationFn: ({ fullName, username }: { fullName: string; username: string }) =>
       completeProfile(fullName, username)
   })
-}
-
-export interface User {
-  _id: string
-  email: string
-  fullName: string
-  avatar: string
-  isProfileCompleted: boolean
-  isVerified: boolean
-  username: string
-  contacts: unknown[]
-}
-
-export interface Contact {
-  _id: string
-  isFavorite?: boolean
-  nickname?: string
-  status?: string
-  labels: string[]
-  recipient: User
-}
-
-// Type your API response
-export interface ProfileResponse {
-  success: boolean
-  data: {
-    message?: string
-    user: User
-    contacts: Contact[]
-    conversations: unknown[]
-  }
 }
 
 interface ApiError extends Error {

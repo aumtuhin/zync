@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { requestEmailOTP, requestSmsOTP, verifyEmailOTP, verifySmsOTP } from '../api/auth'
+import { requestEmailOTP, requestSmsOTP, verifyEmailOTP, verifySmsOTP } from '../../api/auth'
 
 export const useRequestEmailOTP = () => {
   return useMutation({

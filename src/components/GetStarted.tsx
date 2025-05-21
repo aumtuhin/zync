@@ -8,8 +8,8 @@ import {
   useRequestSmsOTP,
   useVerifyEmailOTP,
   useVerifySmsOTP
-} from '../hooks/useOTP'
-import { useCompleteProfile, useProfile } from '../hooks/useProfile'
+} from '../hooks/queries/useOTP'
+import { useCompleteProfile, useProfile } from '../hooks/queries/useProfile'
 import { isTokenValid, tokenStorage } from '../utils/auth.utils'
 
 const GetStarted: React.FC = () => {

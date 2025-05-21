@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { Chat, User, Theme } from '../types'
-import { Contact, User as ZUser } from '../hooks/useProfile'
-import { Search, PlusCircle, Settings, Sun, Moon, UserPlus } from 'lucide-react'
+import { Contact, Conversation, User as ZUser } from '../types/index'
+import { PlusCircle, Settings, Sun, Moon, UserPlus } from 'lucide-react'
 import ChatListItem from './ChatListItem'
 import NewChatDialog from './NewChatDialog'
 import SettingsDialog from './SettingsDialog'
 import AddContactDialog from './AddContactDialog'
+import { getOtherParticipant } from '../utils/user.utils'
+import { SearchConversation } from './SearchConversation'
 
 interface SidebarProps {
   chats: Chat[]
@@ -18,19 +20,19 @@ interface SidebarProps {
   darkMode: boolean
   contactError: string
   contactSuccess: string
+  conversations: Conversation[]
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>
   onAddContact: (fullName: string, email?: string, phone?: string) => void
-  onCreateChat: (userId: string) => void
+  onCreateChat: (recipient: ZUser) => void
   onDeleteChat: (chatId: string) => void
   theme: Theme
   onThemeChange: (theme: Theme) => void
 }
 
-const Sidebar: React.FC<SidebarProps> = ({
-  chats,
-  users,
+const Sidebar = ({
   currentUser,
   contacts,
+  conversations,
   user,
   activeChat,
   onChatSelect,
@@ -42,21 +44,25 @@ const Sidebar: React.FC<SidebarProps> = ({
   contactError,
   contactSuccess,
   onThemeChange
-}) => {
+}: SidebarProps) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [isNewChatOpen, setIsNewChatOpen] = useState(false)
   const [isAddContactOpen, setIsAddContactOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([])
 
-  const filteredChats = searchQuery
-    ? chats.filter((chat) => {
-        const otherParticipant = chat.isGroup
-          ? chat.groupName
-          : users.find((user) => chat.participants.includes(user.id) && user.id !== currentUser.id)
-              ?.name
-        return otherParticipant?.toLowerCase().includes(searchQuery.toLowerCase())
-      })
-    : chats
+  const searchConversations = (query: string) => {
+    setSearchQuery(query)
+    const matchingRecipientIds = contacts
+      .filter((contact) => contact.nickname?.toLowerCase().includes(query.toLocaleLowerCase()))
+      .map((contact) => contact.recipient?._id)
+      .filter(Boolean)
+
+    const filteredConv = conversations.filter((conversation) =>
+      conversation.participants.some((p) => matchingRecipientIds.includes(p._id))
+    )
+    setFilteredConversations(filteredConv)
+  }
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800">
@@ -91,37 +97,56 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      <div className="px-4 py-2">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search or start new chat"
-            className="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Search className="absolute left-3 top-2.5 text-gray-500 dark:text-gray-400" size={18} />
-        </div>
-      </div>
+      {conversations.length > 0 && (
+        <SearchConversation
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          searchConversations={searchConversations}
+        />
+      )}
 
       <div className="flex-1 overflow-y-auto">
-        {filteredChats.map((chat) => {
-          const otherParticipant = chat.isGroup
-            ? undefined
-            : users.find(
-                (user) => chat.participants.includes(user.id) && user.id !== currentUser.id
-              )
+        {filteredConversations.length == 0 &&
+          conversations.map((conversation) => {
+            const otherParticipant = getOtherParticipant(conversation.participants, user._id)
+            const contact = contacts.find(
+              (contact) => contact.recipient._id === otherParticipant?._id
+            )
+            return (
+              <ChatListItem
+                isActive={activeChat?.id === conversation._id}
+                key={conversation._id}
+                conversation={conversation}
+                recipient={otherParticipant}
+                nickname={contact?.nickname}
+                onClick={() => onChatSelect(conversation._id)}
+              />
+            )
+          })}
 
-          return (
-            <ChatListItem
-              key={chat.id}
-              chat={chat}
-              user={otherParticipant}
-              isActive={activeChat?.id === chat.id}
-              onClick={() => onChatSelect(chat.id)}
-            />
-          )
-        })}
+        {filteredConversations.length > 0 &&
+          filteredConversations.map((conversation) => {
+            const otherParticipant = getOtherParticipant(conversation.participants, user._id)
+            const contact = contacts.find(
+              (contact) => contact.recipient._id === otherParticipant?._id
+            )
+            return (
+              <ChatListItem
+                isActive={activeChat?.id === conversation._id}
+                key={conversation._id}
+                conversation={conversation}
+                recipient={otherParticipant}
+                nickname={contact?.nickname}
+                onClick={() => onChatSelect(conversation._id)}
+              />
+            )
+          })}
+
+        {conversations.length === 0 && (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500 dark:text-gray-400">No conversations found</p>{' '}
+          </div>
+        )}
       </div>
 
       <div className="p-4">
