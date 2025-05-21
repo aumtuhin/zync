@@ -10,7 +10,7 @@ export const useAddContact = () => {
     }: {
       fullName: string
       email?: string
-      phone: string
+      phone?: string
     }) => {
       const response = await addContact(fullName, email, phone)
       return response.data

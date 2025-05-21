@@ -122,9 +122,14 @@ const GetStarted: React.FC = () => {
             {
               onSuccess: (response: any) => {
                 if (response) {
-                  tokenStorage.setToken(response.data.token as string)
                   setError('')
-                  setStep('profile')
+                  tokenStorage.setToken(response.data.token as string)
+                  if (response.data.user.isProfileCompleted) {
+                    navigate('/chat')
+                    return
+                  } else {
+                    setStep('profile')
+                  }
                 } else {
                   setError('Something went wrong. Please try again.')
                 }

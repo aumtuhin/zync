@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Chat, User, Theme } from '../types'
-import { User as ZUser } from '../hooks/useProfile'
+import { Contact, User as ZUser } from '../hooks/useProfile'
 import { Search, PlusCircle, Settings, Sun, Moon, UserPlus } from 'lucide-react'
 import ChatListItem from './ChatListItem'
 import NewChatDialog from './NewChatDialog'
@@ -12,11 +12,14 @@ interface SidebarProps {
   users: User[]
   currentUser: User
   user: ZUser
-  contacts: ZUser[]
+  contacts: Contact[]
   activeChat: Chat | null
   onChatSelect: (chatId: string) => void
   darkMode: boolean
+  contactError: string
+  contactSuccess: string
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>
+  onAddContact: (fullName: string, email?: string, phone?: string) => void
   onCreateChat: (userId: string) => void
   onDeleteChat: (chatId: string) => void
   theme: Theme
@@ -34,7 +37,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   darkMode,
   setDarkMode,
   onCreateChat,
+  onAddContact,
   theme,
+  contactError,
+  contactSuccess,
   onThemeChange
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -146,9 +152,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       <AddContactDialog
         isOpen={isAddContactOpen}
         onClose={() => setIsAddContactOpen(false)}
-        onSave={(contact) => {
-          console.log('Saving contact:', contact)
-        }}
+        onAddContact={onAddContact}
+        contactError={contactError}
+        contactSuccess={contactSuccess}
       />
 
       <SettingsDialog

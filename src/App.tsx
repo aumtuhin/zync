@@ -1,26 +1,35 @@
-import { useState } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState, useMemo } from 'react'
 import Layout from './components/Layout'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
 import { Chat, Message, Theme } from './types'
 import { mockChats, mockUsers, currentUser } from './data/mockData'
 import { chatTheme } from './theme/chat'
-import { useProfile } from './hooks/useProfile'
-import { useContacts } from './hooks/useContact'
+import { Contact, useProfile } from './hooks/useProfile'
+import { useAddContact } from './hooks/useContact'
 
 function App() {
+  const { mutate: mutateAddContact } = useAddContact()
+  const { data: response, isPending } = useProfile()
+
   const [activeChat, setActiveChat] = useState<Chat | null>(null)
   const [chats, setChats] = useState<Chat[]>(mockChats)
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [theme, setTheme] = useState<Theme>(chatTheme)
-  const { data: response, isPending } = useProfile()
-  const { data: contactsResponse } = useContacts()
-
-  console.log('contactsResponse', contactsResponse)
 
   const user = response?.data.user
+  const userContacts = useMemo(() => response?.data?.contacts || [], [response?.data?.contacts])
 
-  const contacts = contactsResponse?.data.contacts || []
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [contactError, setContactError] = useState<string>('')
+  const [contactSuccess, setContactSuccess] = useState<string>('')
+
+  useEffect(() => {
+    if (userContacts.length > 0) {
+      setContacts(userContacts)
+    }
+  }, [userContacts])
 
   const handleSendMessage = (content: string) => {
     if (!activeChat) return
@@ -62,6 +71,7 @@ function App() {
   }
 
   const handleCreateChat = (userId: string) => {
+    console.log('Creating chat with user:', userId)
     const existingChat = chats.find(
       (chat) =>
         !chat.isGroup &&
@@ -83,6 +93,24 @@ function App() {
 
     setChats([newChat, ...chats])
     setActiveChat(newChat)
+  }
+
+  const handleAddContact = (name: string, email?: string, phone?: string) => {
+    mutateAddContact(
+      { fullName: name, email, phone },
+      {
+        onSuccess: (data: any) => {
+          setContactError('')
+          setContactSuccess(data.data.message)
+          setContacts((prevContacts) => [...prevContacts, data.data.contact])
+        },
+        onError: (error: any) => {
+          console.error('Error adding contact:', error)
+          setContactSuccess('')
+          setContactError(error.response.data.message)
+        }
+      }
+    )
   }
 
   const handleDeleteChat = (chatId: string) => {
@@ -151,8 +179,11 @@ function App() {
               setDarkMode={setDarkMode}
               onCreateChat={handleCreateChat}
               onDeleteChat={handleDeleteChat}
+              onAddContact={handleAddContact}
               theme={theme}
               onThemeChange={handleThemeChange}
+              contactError={contactError}
+              contactSuccess={contactSuccess}
             />
           }
           content={

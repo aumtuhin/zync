@@ -19,12 +19,23 @@ export interface User {
   contacts: unknown[]
 }
 
+export interface Contact {
+  _id: string
+  isFavorite?: boolean
+  nickname?: string
+  status?: string
+  labels: string[]
+  recipient: User
+}
+
 // Type your API response
 export interface ProfileResponse {
   success: boolean
   data: {
-    message: string
+    message?: string
     user: User
+    contacts: Contact[]
+    conversations: unknown[]
   }
 }
 

@@ -1,37 +1,28 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { X, User, Mail, Phone } from 'lucide-react'
-import { useAddContact } from '../hooks/useContact'
 
 interface AddContactDialogProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (contact: { name: string; email: string; phone: string }) => void
+  onAddContact: (fullName: string, email?: string, phone?: string) => void
+  contactError: string
+  contactSuccess: string
 }
 
-const AddContactDialog: React.FC<AddContactDialogProps> = ({ isOpen, onClose }) => {
+const AddContactDialog: React.FC<AddContactDialogProps> = ({
+  isOpen,
+  onClose,
+  onAddContact,
+  contactError,
+  contactSuccess
+}) => {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [success, setSuccess] = useState('')
-  const [error, setError] = useState('')
-
-  const { mutate: mutateAddContact } = useAddContact()
 
   const handleSave = () => {
-    mutateAddContact(
-      { fullName: name, email, phone },
-      {
-        onSuccess: (data: any) => {
-          setSuccess(data.data.message)
-          setError('')
-        },
-        onError: (error: any) => {
-          setError(error.response.data.message)
-        }
-      }
-    )
+    onAddContact(name, email, phone)
     setName('')
     setEmail('')
     setPhone('')
@@ -66,8 +57,8 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ isOpen, onClose }) 
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
-                  setError('')
-                  setSuccess('')
+                  contactError = ''
+                  contactSuccess = ''
                 }}
               />
               <User
@@ -84,8 +75,6 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ isOpen, onClose }) 
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value)
-                  setError('')
-                  setSuccess('')
                 }}
               />
               <Mail
@@ -106,8 +95,6 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ isOpen, onClose }) 
                 value={phone}
                 onChange={(e) => {
                   setPhone(e.target.value)
-                  setError('')
-                  setSuccess('')
                 }}
               />
               <Phone
@@ -117,12 +104,12 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ isOpen, onClose }) 
             </div>
           </div>
 
-          {error && (
+          {contactError && (
             <div className="p-4 text-red-600 dark:text-red-400">
-              <p>{error}</p>
+              <p>{contactError}</p>
             </div>
           )}
-          {success && (
+          {contactSuccess && (
             <div className="p-4 text-green-600 dark:text-green-400">
               <p>Contact added successfully!</p>
             </div>

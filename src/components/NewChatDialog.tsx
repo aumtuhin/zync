@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { Search, X } from 'lucide-react'
-import { User as ZUser } from '../hooks/useProfile'
 import StatusDot from './StatusDot'
+import { Contact } from '../hooks/useProfile'
 
 interface NewChatDialogProps {
   isOpen: boolean
   onClose: () => void
-  contacts: ZUser[]
+  contacts: Contact[]
   onCreateChat: (userId: string) => void
 }
 
@@ -18,8 +18,6 @@ const NewChatDialog: React.FC<NewChatDialogProps> = ({
   onCreateChat
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
-
-  console.log('contacts', contacts)
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
@@ -57,7 +55,7 @@ const NewChatDialog: React.FC<NewChatDialogProps> = ({
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {contacts.map((contact) => (
                 <button
-                  key={contact._id}
+                  key={contact?._id}
                   onClick={() => {
                     onCreateChat(contact._id)
                     onClose()
@@ -66,15 +64,15 @@ const NewChatDialog: React.FC<NewChatDialogProps> = ({
                 >
                   <div className="relative">
                     <img
-                      src={contact.avatar}
-                      alt={contact.fullName}
+                      src={contact.recipient.avatar}
+                      alt={contact.nickname}
                       className="w-12 h-12 rounded-full object-cover"
                     />
                     <StatusDot status="offline" className="absolute bottom-0 right-0" />
                   </div>
                   <div className="ml-3 text-left">
                     <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                      {contact.fullName}
+                      {contact.nickname || contact.recipient.fullName}
                     </h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400">offline</p>
                   </div>
