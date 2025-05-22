@@ -14,11 +14,11 @@ export const apiClient = axios.create({
 
 // List of endpoints that DON'T require auth
 const PUBLIC_ENDPOINTS = [
+  '/',
   '/otp/request-email',
   '/otp/request-sms',
   '/otp/verify-email',
   '/otp/verify-sms',
-  '/auth/login',
   '/auth/refresh-token'
 ]
 
@@ -42,24 +42,23 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    // If 401 error and not already retried
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
       try {
-        // Attempt refresh
         const refreshResponse = await apiClient.post('/auth/refresh-token')
+        const newToken = (refreshResponse.data as { accessToken: string }).accessToken
 
-        const newToken = (refreshResponse.data as { token: string }).token
-
-        // Save new access token and retry original request
         tokenStorage.setToken(newToken)
+
         originalRequest.headers = originalRequest.headers || {}
         originalRequest.headers.Authorization = `Bearer ${newToken}`
 
         return apiClient(originalRequest)
-      } catch (refreshError) {
-        if (refreshError instanceof AxiosError) tokenStorage.clearTokens()
+      } catch (refreshError: unknown) {
+        tokenStorage.clearTokens()
+        window.location.href = '/'
+        return Promise.reject(refreshError)
       }
     }
 

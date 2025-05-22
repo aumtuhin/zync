@@ -34,14 +34,14 @@ function App() {
   const [contactError, setContactError] = useState<string>('')
   const [contactSuccess, setContactSuccess] = useState<string>('')
 
-  console.log('conversations', conversations)
-
   useEffect(() => {
     if (response?.success) {
       setContacts(userContacts)
       setConversations(userConversations)
     }
   }, [response?.success, userContacts, userConversations])
+
+  console.log(conversations)
 
   const handleSendMessage = (content: string) => {
     if (!activeChat) return
