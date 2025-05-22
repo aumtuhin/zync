@@ -1,7 +1,7 @@
 import { apiClient } from './client'
 
-export const createConversation = (recipientId: string, content: string) => {
-  return apiClient.post('chat/create', { recipientId, content })
+export const createConversation = (recipientId: string) => {
+  return apiClient.post('chat/create', { recipientId })
 }
 
 export const getConversations = () => {

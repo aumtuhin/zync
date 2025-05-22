@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Mic, MicOff, Camera, CameraOff, PhoneOff, Minus, X } from 'lucide-react'
-import { User } from '../types'
+import { User } from '../types/index'
 
 interface VideoCallWindowProps {
   isOpen: boolean
@@ -107,9 +107,13 @@ const VideoCallWindow: React.FC<VideoCallWindowProps> = ({ isOpen, onClose, call
         <div className={`transition-all ${isMinimized ? 'h-16' : ''}`}>
           {isMinimized ? (
             <div className="flex items-center p-2">
-              <img src={receiver.avatar} alt={receiver.name} className="w-10 h-10 rounded-full" />
+              <img
+                src={receiver.avatar}
+                alt={receiver.fullName}
+                className="w-10 h-10 rounded-full"
+              />
               <div className="ml-3">
-                <p className="text-white text-sm font-medium">{receiver.name}</p>
+                <p className="text-white text-sm font-medium">{receiver.fullName}</p>
                 <p className="text-white/80 text-xs">{formatDuration(callDuration)}</p>
               </div>
             </div>
@@ -120,7 +124,7 @@ const VideoCallWindow: React.FC<VideoCallWindowProps> = ({ isOpen, onClose, call
                 {!isVideoOff && (
                   <img
                     src={receiver.avatar}
-                    alt={receiver.name}
+                    alt={receiver.fullName}
                     className="w-full h-full object-cover"
                   />
                 )}
@@ -128,7 +132,11 @@ const VideoCallWindow: React.FC<VideoCallWindowProps> = ({ isOpen, onClose, call
 
               {/* Small video (caller) */}
               <div className="absolute bottom-4 right-4 w-40 aspect-video bg-black rounded-lg overflow-hidden border-2 border-white/20">
-                <img src={caller.avatar} alt={caller.name} className="w-full h-full object-cover" />
+                <img
+                  src={caller.avatar}
+                  alt={caller.fullName}
+                  className="w-full h-full object-cover"
+                />
               </div>
 
               {/* Call duration */}

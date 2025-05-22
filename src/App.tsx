@@ -5,31 +5,35 @@ import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
 import EmptyChatArea from './components/EmptyChatArea'
 
-import { Chat, Theme } from './types'
-import { mockChats, mockUsers, currentUser } from './data/mockData'
-import { chatTheme } from './theme/chat'
 import { useProfile } from './hooks/queries/useProfile'
-import { Contact, Conversation, User } from './types/index'
+import { Contact, Conversation, Message, User } from './types/index'
 import { useAddContact } from './hooks/queries/useContact'
 import { useCreateConversation } from './hooks/queries/useChat'
-import { getConversationById } from './utils/conversation.utils'
+import { useSendMessage } from './hooks/queries/useMessages'
+
+import { getConversationById, getOtherParticipant } from './utils/conversation.utils'
+import { Theme } from './types'
+import { mockUsers } from './data/mockData'
+import { chatTheme } from './theme/chat'
 
 function App() {
   const { mutate: mutateAddContact } = useAddContact()
-  const { mutate: mutateCreateConversation } = useCreateConversation()
+  const { mutate: mutateCreateConversation, isPending: isPendingCreateConv } =
+    useCreateConversation()
+  const { mutate: mutateSendMessage } = useSendMessage()
   const { data: response, isPending } = useProfile()
 
-  const [activeChat, setActiveChat] = useState<Chat | null>(null)
   const [contacts, setContacts] = useState<Contact[]>([])
   const [contactError, setContactError] = useState<string>('')
   const [conversations, setConversations] = useState<Conversation[]>([])
-  const [contactSuccess, setContactSuccess] = useState<string>('')
+  const [newMessage, setNewMessage] = useState<Message>()
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null)
-  const [chats, setChats] = useState<Chat[]>(mockChats)
+  const [contactSuccess, setContactSuccess] = useState<string>('')
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [theme, setTheme] = useState<Theme>(chatTheme)
 
   const user = response?.data.user
+  const lastActiveConversation = user?.lastActiveConversation
   const userContacts = useMemo(() => response?.data?.contacts || [], [response?.data?.contacts])
   const userConversations = useMemo(
     () => response?.data?.conversations || [],
@@ -37,37 +41,26 @@ function App() {
   )
 
   useEffect(() => {
-    if (response?.success) {
+    if (response?.success && lastActiveConversation) {
       setContacts(userContacts)
       setConversations(userConversations)
+      setActiveConversation(lastActiveConversation)
     }
-  }, [response?.success, userContacts, userConversations])
+  }, [response?.success, userContacts, userConversations, lastActiveConversation])
 
   const handleSendMessage = (content: string) => {
-    if (!activeChat) return
     if (!activeConversation?._id) return
     if (!user?._id) return
 
-    const otherParticipant = getConversationById(conversations, user._id)
+    const otherParticipant = getOtherParticipant(activeConversation, user._id)
     if (!otherParticipant) return
 
-    mutateCreateConversation(
+    mutateSendMessage(
       { recipientId: otherParticipant._id, content: content },
       {
         onSuccess: (data) => {
-          // Update the local state with the new conversation
-          // remove locally stored conversation
-          const updatedConversations = conversations.filter(
-            (conversation) => conversation._id !== otherParticipant._id
-          )
-          setConversations(updatedConversations)
-          setConversations((prevConversations) => [
-            data.data.conversation,
-            ...prevConversations.filter((conversation) => conversation._id !== otherParticipant._id)
-          ])
-        },
-        onError: (error) => {
-          console.error('Error creating conversation:', error)
+          const newMessage: Message = data.data.message
+          setNewMessage(newMessage)
         }
       }
     )
@@ -78,21 +71,11 @@ function App() {
     if (activeConv) {
       setActiveConversation(activeConv)
     }
-    const selected = chats.find((chat) => chat.id === conversationId) || null
-    if (selected && selected.unreadCount) {
-      const updatedChats = chats.map((chat) =>
-        chat.id === conversationId ? { ...chat, unreadCount: 0 } : chat
-      )
-      setChats(updatedChats)
-      setActiveChat({ ...selected, unreadCount: 0 })
-    } else {
-      setActiveChat(selected)
-    }
   }
 
   const handleCreateChat = (recipient: User) => {
-    const existingConversation = conversations.find((chat) =>
-      chat.participants.some((participant) => participant._id === recipient._id)
+    const existingConversation = conversations.find((conv) =>
+      conv.participants.some((participant) => participant._id === recipient._id)
     )
 
     if (existingConversation) {
@@ -105,15 +88,22 @@ function App() {
     }
 
     if (!existingConversation && user) {
-      const newConversation = {
-        _id: recipient._id,
-        participants: [user, recipient],
-        messages: [],
-        unreadCount: null,
-        lastMessage: ''
-      }
-      setConversations((prevConversations) => [newConversation, ...prevConversations])
-      setActiveConversation(newConversation)
+      mutateCreateConversation(
+        { recipientId: recipient._id },
+        {
+          onSuccess: (data: any) => {
+            const newConversation = data.data.conversation
+            setConversations((prevConversations) => [
+              newConversation,
+              ...prevConversations.filter((conversation) => conversation._id !== recipient._id)
+            ])
+            setActiveConversation(newConversation)
+          },
+          onError: (error) => {
+            console.error('Error creating conversation:', error)
+          }
+        }
+      )
     }
   }
 
@@ -135,36 +125,19 @@ function App() {
     )
   }
 
-  const handleDeleteChat = (chatId: string) => {
-    const updatedChats = chats.filter((chat) => chat.id !== chatId)
-    setChats(updatedChats)
-    if (activeChat?.id === chatId) {
-      setActiveChat(null)
-    }
+  const onSearchContacts = (query: string) => {
+    const filteredContacts = userContacts.filter((contact) =>
+      contact.nickname?.toLowerCase().includes(query.toLowerCase())
+    )
+    setContacts(filteredContacts)
+  }
+
+  const handleDeleteChat = (conversationId: string) => {
+    return conversationId
   }
 
   const handleDeleteMessage = (messageId: string, deleteForEveryone: boolean) => {
-    if (!activeChat) return
-
-    const updatedChats = chats.map((chat) => {
-      if (chat.id === activeChat.id) {
-        const updatedMessages = chat.messages.filter((msg) => msg.id !== messageId)
-        return {
-          ...chat,
-          messages: updatedMessages,
-          lastMessage: updatedMessages[updatedMessages.length - 1] || null
-        }
-      }
-      return chat
-    })
-
-    // todo - handle delete for everyone
-    if (deleteForEveryone) {
-      return
-    }
-
-    setChats(updatedChats)
-    setActiveChat(updatedChats.find((chat) => chat.id === activeChat.id) || null)
+    return { messageId, deleteForEveryone }
   }
 
   const handleThemeChange = (newTheme: Theme) => {
@@ -190,9 +163,7 @@ function App() {
         <Layout
           sidebar={
             <Sidebar
-              chats={chats}
-              users={mockUsers}
-              currentUser={currentUser}
+              currentUser={user}
               user={user}
               contacts={contacts}
               onChatSelect={handleChatSelect}
@@ -202,21 +173,24 @@ function App() {
               onCreateChat={handleCreateChat}
               onDeleteChat={handleDeleteChat}
               onAddContact={handleAddContact}
+              onSearchContacts={onSearchContacts}
               theme={theme}
               onThemeChange={handleThemeChange}
               contactError={contactError}
               contactSuccess={contactSuccess}
               conversations={conversations}
+              isPendingCreateConv={isPendingCreateConv}
             />
           }
           content={
             activeConversation ? (
               <ChatArea
-                chat={activeChat}
                 activeConversation={activeConversation}
                 users={mockUsers}
-                currentUser={currentUser}
+                currentUser={user}
+                contacts={contacts}
                 onSendMessage={handleSendMessage}
+                newMessage={newMessage}
                 onDeleteChat={handleDeleteChat}
                 onDeleteMessage={handleDeleteMessage}
                 theme={theme}

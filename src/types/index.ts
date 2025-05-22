@@ -1,3 +1,10 @@
+export interface Conversation {
+  _id: string
+  participants: User[]
+  messages: unknown[]
+  unreadCount?: number | null
+  lastMessage?: string
+}
 export interface User {
   _id: string
   email: string
@@ -8,6 +15,7 @@ export interface User {
   isVerified: boolean
   username: string
   contacts: Contact[]
+  lastActiveConversation?: Conversation
 }
 
 export interface Contact {
@@ -19,12 +27,18 @@ export interface Contact {
   recipient: User
 }
 
-export interface Conversation {
+export interface Message {
   _id: string
-  participants: User[]
-  messages: unknown[]
-  unreadCount?: number | null
-  lastMessage?: string
+  conversation: string
+  sender: User
+  content: string
+  status: 'sent' | 'delivered' | 'read' | 'failed'
+  readBy: string[] // Array of user IDs who read the message
+  deletedFor: string[] // Array of user IDs the message is deleted for
+  createdAt: Date
+  updatedAt: Date
+  __v: number
+  timestamp: string | Date
 }
 
 export interface ProfileResponse {
@@ -42,5 +56,13 @@ export interface ConversationResponse {
   data: {
     messages?: unknown[]
     conversations: Conversation[]
+  }
+}
+
+export interface MessageResponse {
+  success: boolean
+  data: {
+    messages: Message[]
+    conversation?: Conversation
   }
 }

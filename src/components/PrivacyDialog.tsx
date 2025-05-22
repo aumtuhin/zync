@@ -1,21 +1,17 @@
-import React from 'react';
-import { Dialog } from '@headlessui/react';
-import { Eye, EyeOff, Users, Bell, Clock, Shield, X } from 'lucide-react';
-import { User } from '../types';
+import React from 'react'
+import { Dialog } from '@headlessui/react'
+import { Eye, Users, Clock, Shield, X } from 'lucide-react'
+import { User } from '../types/index'
 
 interface PrivacyDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  user: User;
+  isOpen: boolean
+  onClose: () => void
+  user: User
 }
 
-const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose, user }) => {
+const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose }) => {
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="fixed inset-0 z-50 overflow-y-auto"
-    >
+    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen">
         <Dialog.Overlay className="fixed inset-0 bg-black/30" />
 
@@ -35,7 +31,9 @@ const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose, user }) 
           <div className="p-6">
             <div className="space-y-6">
               <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Last Seen and Online</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Last Seen and Online
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -50,7 +48,9 @@ const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose, user }) 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <Eye className="text-gray-500 dark:text-gray-400" size={24} />
-                      <span className="ml-3 text-gray-700 dark:text-gray-200">Show online status</span>
+                      <span className="ml-3 text-gray-700 dark:text-gray-200">
+                        Show online status
+                      </span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
@@ -61,12 +61,16 @@ const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose, user }) 
               </div>
 
               <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Profile Photo</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Profile Photo
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <Users className="text-gray-500 dark:text-gray-400" size={24} />
-                      <span className="ml-3 text-gray-700 dark:text-gray-200">Who can see my profile photo</span>
+                      <span className="ml-3 text-gray-700 dark:text-gray-200">
+                        Who can see my profile photo
+                      </span>
                     </div>
                     <select className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg px-3 py-1">
                       <option>Everyone</option>
@@ -78,12 +82,16 @@ const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose, user }) 
               </div>
 
               <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Read Receipts</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Read Receipts
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <Shield className="text-gray-500 dark:text-gray-400" size={24} />
-                      <span className="ml-3 text-gray-700 dark:text-gray-200">Send read receipts</span>
+                      <span className="ml-3 text-gray-700 dark:text-gray-200">
+                        Send read receipts
+                      </span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
@@ -94,7 +102,9 @@ const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose, user }) 
               </div>
 
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Blocked Contacts</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Blocked Contacts
+                </h2>
                 <button className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">
                   Manage blocked contacts
                 </button>
@@ -104,7 +114,7 @@ const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose, user }) 
         </div>
       </div>
     </Dialog>
-  );
-};
+  )
+}
 
-export default PrivacyDialog;
+export default PrivacyDialog

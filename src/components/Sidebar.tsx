@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { Chat, User, Theme } from '../types'
-import { Contact, Conversation, User as ZUser } from '../types/index'
+import { Theme } from '../types'
+import { Contact, Conversation, User } from '../types/index'
 import { PlusCircle, Settings, Sun, Moon, UserPlus } from 'lucide-react'
 import ChatListItem from './ChatListItem'
 import NewChatDialog from './NewChatDialog'
@@ -10,10 +10,8 @@ import { getOtherParticipant } from '../utils/user.utils'
 import { SearchConversation } from './SearchConversation'
 
 interface SidebarProps {
-  chats: Chat[]
-  users: User[]
   currentUser: User
-  user: ZUser
+  user: User
   contacts: Contact[]
   activeConversation: Conversation | null
   onChatSelect: (chatId: string) => void
@@ -21,9 +19,11 @@ interface SidebarProps {
   contactError: string
   contactSuccess: string
   conversations: Conversation[]
+  isPendingCreateConv: boolean
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>
   onAddContact: (fullName: string, email?: string, phone?: string) => void
-  onCreateChat: (recipient: ZUser) => void
+  onSearchContacts: (query: string) => void
+  onCreateChat: (recipient: User) => void
   onDeleteChat: (chatId: string) => void
   theme: Theme
   onThemeChange: (theme: Theme) => void
@@ -35,6 +35,7 @@ const Sidebar = ({
   conversations,
   user,
   activeConversation,
+  isPendingCreateConv,
   onChatSelect,
   darkMode,
   setDarkMode,
@@ -49,9 +50,9 @@ const Sidebar = ({
   const [isNewChatOpen, setIsNewChatOpen] = useState(false)
   const [isAddContactOpen, setIsAddContactOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([])
 
   const searchConversations = (query: string) => {
+    // todo: implement search conversations properly
     setSearchQuery(query)
     const matchingRecipientIds = contacts
       .filter((contact) => contact.nickname?.toLowerCase().includes(query.toLocaleLowerCase()))
@@ -61,7 +62,7 @@ const Sidebar = ({
     const filteredConv = conversations.filter((conversation) =>
       conversation.participants.some((p) => matchingRecipientIds.includes(p._id))
     )
-    setFilteredConversations(filteredConv)
+    return filteredConv
   }
 
   return (
@@ -106,41 +107,23 @@ const Sidebar = ({
       )}
 
       <div className="flex-1 overflow-y-auto">
-        {filteredConversations.length == 0 &&
-          conversations.map((conversation) => {
-            const otherParticipant = getOtherParticipant(conversation.participants, user._id)
-            const contact = contacts.find(
-              (contact) => contact.recipient._id === otherParticipant?._id
-            )
-            return (
-              <ChatListItem
-                isActive={activeConversation?._id === conversation._id}
-                key={conversation._id}
-                conversation={conversation}
-                recipient={otherParticipant}
-                nickname={contact?.nickname}
-                onClick={() => onChatSelect(conversation._id)}
-              />
-            )
-          })}
-
-        {filteredConversations.length > 0 &&
-          filteredConversations.map((conversation) => {
-            const otherParticipant = getOtherParticipant(conversation.participants, user._id)
-            const contact = contacts.find(
-              (contact) => contact.recipient._id === otherParticipant?._id
-            )
-            return (
-              <ChatListItem
-                isActive={activeConversation?._id === conversation._id}
-                key={conversation._id}
-                conversation={conversation}
-                recipient={otherParticipant}
-                nickname={contact?.nickname}
-                onClick={() => onChatSelect(conversation._id)}
-              />
-            )
-          })}
+        {isPendingCreateConv && <div className="loading">Creating...</div>}
+        {conversations.map((conversation) => {
+          const otherParticipant = getOtherParticipant(conversation.participants, user._id)
+          const contact = contacts.find(
+            (contact) => contact.recipient._id === otherParticipant?._id
+          )
+          return (
+            <ChatListItem
+              isActive={activeConversation?._id === conversation._id}
+              key={conversation._id}
+              conversation={conversation}
+              recipient={otherParticipant}
+              nickname={contact?.nickname}
+              onClick={() => onChatSelect(conversation._id)}
+            />
+          )
+        })}
 
         {conversations.length === 0 && (
           <div className="flex items-center justify-center h-full">

@@ -1,36 +1,48 @@
 import React, { useRef, useEffect, useState } from 'react'
-import { Chat, User, Theme, Message } from '../types'
 import ProfileHeader from './ProfileHeader'
 import MessageBubble from './MessageBubble'
 import MessageInput from './MessageInput'
 import { Phone, Video, MoreVertical, Trash2, Search } from 'lucide-react'
 import StatusDot from './StatusDot'
-import { formatUserLastSeen } from '../utils/dateUtils'
 import DeleteChatDialog from './DeleteChatDialog'
 import MessageSearchDialog from './MessageSearchDialog'
 import DeleteMessageDialog from './DeleteMessageDialog'
 import AudioCallWindow from './AudioCallWindow'
 import VideoCallWindow from './VideoCallWindow'
-import { Conversation } from '../types/index'
+
 import { useMessages } from '../hooks/queries/useMessages'
 
+// import { formatUserLastSeen } from '../utils/dateUtils'
+import { getOtherParticipant } from '../utils/conversation.utils'
+import { getContactById } from '../utils/user.utils'
+import { Contact, Conversation } from '../types/index'
+import { User, Theme } from '../types'
+import { User as ZUser, Message } from '../types/index'
+
+import ringtone from '../assets/ringtone.mp3'
+
+import { mockChats } from '../data/mockData'
+const mockChat = mockChats[0]
+
 interface ChatAreaProps {
-  chat: Chat | null
   activeConversation: Conversation
   users: User[]
-  currentUser: User
+  currentUser: ZUser
+  contacts: Contact[]
   onSendMessage: (content: string) => void
+  newMessage: Message | undefined
   onDeleteChat: (chatId: string) => void
   onDeleteMessage: (messageId: string, deleteForEveryone: boolean) => void
   theme: Theme
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({
-  chat,
   activeConversation,
   users,
   currentUser,
+  contacts,
   onSendMessage,
+  newMessage,
   onDeleteChat,
   onDeleteMessage,
   theme
@@ -43,18 +55,33 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [isDeleteMessageDialogOpen, setIsDeleteMessageDialogOpen] = useState(false)
   const [isAudioCallOpen, setIsAudioCallOpen] = useState(false)
   const [isVideoCallOpen, setIsVideoCallOpen] = useState(false)
-
-  console.log('chat area rendered')
-
-  console.log(activeConversation._id)
+  const [messages, setMessages] = useState<Message[]>([])
 
   const { data: messagesResponse, isPending } = useMessages(activeConversation._id)
 
-  console.log('messagesResponse', isPending, messagesResponse?.data)
+  useEffect(() => {
+    if (messagesResponse?.success) {
+      setMessages(messagesResponse.data.messages)
+    }
+  }, [messagesResponse?.success, messagesResponse?.data.messages])
+
+  useEffect(() => {
+    if (newMessage && activeConversation._id === newMessage.conversation) {
+      setMessages((prevMessages) => [...prevMessages, newMessage])
+    }
+  }, [newMessage, activeConversation._id])
+
+  const audioRef = useRef(new Audio(ringtone))
+
+  const playRingtone = () => audioRef.current.play()
+  const stopRingtone = () => {
+    audioRef.current.pause()
+    audioRef.current.currentTime = 0
+  }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [chat?.messages])
+  }, [messages])
 
   const handleMessageDelete = (message: Message) => {
     setSelectedMessage(message)
@@ -72,11 +99,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   }
 
-  if (!chat) return
+  if (!mockChat) return
 
-  const otherParticipant = chat.isGroup
-    ? undefined
-    : users.find((user) => chat.participants.includes(user.id) && user.id !== currentUser.id)
+  const otherParticipant = getOtherParticipant(activeConversation, currentUser._id)
+  const contact = getContactById(contacts, otherParticipant?._id)
 
   const chatBackgroundStyle = theme.chatBackground
     ? {
@@ -95,86 +121,86 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     <div className="h-full flex flex-col bg-white dark:bg-gray-850 relative">
       <div className="absolute inset-0 pointer-events-none" style={chatBackgroundStyle} />
 
-      <ProfileHeader
-        user={
-          otherParticipant || {
-            id: chat.id,
-            name: chat.groupName || '',
-            avatar: chat.groupAvatar || '',
-            status: 'online'
+      {otherParticipant && (
+        <ProfileHeader
+          user={otherParticipant}
+          nickname={contact?.nickname || otherParticipant?.fullName}
+          actions={
+            <div className="flex items-center space-x-4">
+              {otherParticipant && (
+                <div className="flex items-center mr-2">
+                  <StatusDot status="online" />
+                </div>
+              )}
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
+              >
+                <Search size={20} />
+              </button>
+              <button
+                onClick={() => {
+                  playRingtone()
+                  setIsVideoCallOpen(true)
+                }}
+                className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
+              >
+                <Video size={20} />
+              </button>
+              <button
+                onClick={() => {
+                  playRingtone()
+                  setIsAudioCallOpen(true)
+                }}
+                className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
+              >
+                <Phone size={20} />
+              </button>
+              <button
+                onClick={() => {
+                  stopRingtone()
+                  setIsDeleteDialogOpen(true)
+                }}
+                className="text-red-500 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
+              >
+                <Trash2 size={20} />
+              </button>
+              <button className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full">
+                <MoreVertical size={20} />
+              </button>
+            </div>
           }
-        }
-        actions={
-          <div className="flex items-center space-x-4">
-            {otherParticipant && (
-              <div className="flex items-center mr-2">
-                <StatusDot status={otherParticipant.status} />
-                <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
-                  {otherParticipant.status === 'online'
-                    ? 'online'
-                    : otherParticipant.lastSeen
-                      ? formatUserLastSeen(otherParticipant.lastSeen)
-                      : 'offline'}
-                </span>
-              </div>
-            )}
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
-            >
-              <Search size={20} />
-            </button>
-            <button
-              onClick={() => setIsVideoCallOpen(true)}
-              className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
-            >
-              <Video size={20} />
-            </button>
-            <button
-              onClick={() => setIsAudioCallOpen(true)}
-              className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
-            >
-              <Phone size={20} />
-            </button>
-            <button
-              onClick={() => setIsDeleteDialogOpen(true)}
-              className="text-red-500 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"
-            >
-              <Trash2 size={20} />
-            </button>
-            <button className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full">
-              <MoreVertical size={20} />
-            </button>
-          </div>
-        }
-      />
+        />
+      )}
 
       <div className="flex-1 overflow-y-auto p-4 z-10">
-        {chat.messages.map((message, index) => {
-          const isCurrentUser = message.sender === currentUser.id
-          const sender = users.find((user) => user.id === message.sender)
+        {!isPending &&
+          messages &&
+          messages.map((message, index) => {
+            const isCurrentUser = message.sender._id === currentUser._id
+            const sender = otherParticipant
 
-          const prevMessage = index > 0 ? chat.messages[index - 1] : null
-          const isConsecutive = prevMessage && prevMessage.sender === message.sender
+            const prevMessage = index > 0 ? messages[index - 1] : null
+            const isConsecutive = prevMessage && prevMessage.sender._id === message.sender._id
 
-          return (
-            <div
-              key={message.id}
-              ref={(el) => {
-                if (el) messageRefs.current[message.id] = el
-              }}
-              className="transition-colors duration-500"
-            >
-              <MessageBubble
-                message={message}
-                isCurrentUser={isCurrentUser}
-                sender={sender}
-                isConsecutive={isConsecutive}
-                onDelete={() => handleMessageDelete(message)}
-              />
-            </div>
-          )
-        })}
+            return (
+              <div
+                key={message._id}
+                ref={(el) => {
+                  if (el) messageRefs.current[message._id] = el
+                }}
+                className="transition-colors duration-500"
+              >
+                <MessageBubble
+                  message={message}
+                  isCurrentUser={isCurrentUser}
+                  sender={sender}
+                  isConsecutive={isConsecutive}
+                  onDelete={() => handleMessageDelete(message)}
+                />
+              </div>
+            )
+          })}
         <div ref={messagesEndRef} />
       </div>
 
@@ -183,14 +209,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       <DeleteChatDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={() => onDeleteChat(chat.id)}
-        chatName={otherParticipant?.name || chat.groupName || ''}
+        onConfirm={() => onDeleteChat(mockChat.id)}
+        chatName={otherParticipant?.fullName || mockChat.groupName || ''}
       />
 
       <MessageSearchDialog
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        messages={chat.messages}
+        messages={mockChat.messages}
         users={users}
         onScrollToMessage={scrollToMessage}
       />
@@ -203,7 +229,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         }}
         onConfirm={(deleteForEveryone) => {
           if (selectedMessage) {
-            onDeleteMessage(selectedMessage.id, deleteForEveryone)
+            onDeleteMessage(selectedMessage._id, deleteForEveryone)
           }
           setIsDeleteMessageDialogOpen(false)
           setSelectedMessage(null)
@@ -214,14 +240,20 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         <>
           <AudioCallWindow
             isOpen={isAudioCallOpen}
-            onClose={() => setIsAudioCallOpen(false)}
+            onClose={() => {
+              stopRingtone()
+              setIsAudioCallOpen(false)
+            }}
             caller={currentUser}
             receiver={otherParticipant}
           />
 
           <VideoCallWindow
             isOpen={isVideoCallOpen}
-            onClose={() => setIsVideoCallOpen(false)}
+            onClose={() => {
+              stopRingtone()
+              setIsVideoCallOpen(false)
+            }}
             caller={currentUser}
             receiver={otherParticipant}
           />

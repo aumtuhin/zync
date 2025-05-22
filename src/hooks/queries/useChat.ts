@@ -4,8 +4,8 @@ import { ConversationResponse } from '../../types/index'
 
 export const useCreateConversation = () => {
   return useMutation({
-    mutationFn: async ({ recipientId, content }: { recipientId: string; content: string }) => {
-      const response = await createConversation(recipientId, content)
+    mutationFn: async ({ recipientId }: { recipientId: string }) => {
+      const response = await createConversation(recipientId)
       return response.data
     }
   })

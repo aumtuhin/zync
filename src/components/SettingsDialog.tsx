@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react'
 import { Dialog } from '@headlessui/react'
 import { X, Moon, Sun, Bell, Lock, UserCircle, Palette, Upload } from 'lucide-react'
-import { User, Theme, predefinedBackgrounds } from '../types'
-import { User as ZUser } from '../hooks/queries/useProfile'
+import { Theme, predefinedBackgrounds } from '../types'
+import { User } from '../types/index'
 import ProfileDialog from './ProfileDialog'
 import PrivacyDialog from './PrivacyDialog'
 
@@ -10,7 +10,7 @@ interface SettingsDialogProps {
   isOpen: boolean
   onClose: () => void
   currentUser: User
-  user: ZUser
+  user: User
   darkMode: boolean
   setDarkMode: (value: boolean) => void
   theme: Theme

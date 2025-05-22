@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { Search, X } from 'lucide-react'
 import StatusDot from './StatusDot'
@@ -18,6 +18,18 @@ const NewChatDialog: React.FC<NewChatDialogProps> = ({
   onCreateChat
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
+  const [userContacts, setUserContacts] = useState(contacts)
+
+  useEffect(() => {
+    setUserContacts(contacts)
+  }, [contacts])
+
+  const onSearchContacts = (query: string) => {
+    const filteredContacts = contacts.filter((contact) =>
+      contact.nickname?.toLowerCase().includes(query.toLowerCase())
+    )
+    setUserContacts(filteredContacts)
+  }
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
@@ -44,7 +56,10 @@ const NewChatDialog: React.FC<NewChatDialogProps> = ({
                 placeholder="Search contacts"
                 className="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg pl-10 pr-4 py-2 focus:outline-none"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  onSearchContacts(e.target.value)
+                }}
               />
               <Search
                 className="absolute left-3 top-2.5 text-gray-500 dark:text-gray-400"
@@ -53,7 +68,7 @@ const NewChatDialog: React.FC<NewChatDialogProps> = ({
             </div>
 
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {contacts.map((contact) => (
+              {userContacts.map((contact) => (
                 <button
                   key={contact?._id}
                   onClick={() => {

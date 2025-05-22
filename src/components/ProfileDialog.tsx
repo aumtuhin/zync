@@ -1,21 +1,17 @@
-import React from 'react';
-import { Dialog } from '@headlessui/react';
-import { Camera, Bell, Lock, Key, Shield, UserCircle, X } from 'lucide-react';
-import { User } from '../types';
+import React from 'react'
+import { Dialog } from '@headlessui/react'
+import { Camera, Bell, Lock, Key, Shield, UserCircle, X } from 'lucide-react'
+import { User } from '../types/index'
 
 interface ProfileDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  user: User;
+  isOpen: boolean
+  onClose: () => void
+  user: User
 }
 
 const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose, user }) => {
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="fixed inset-0 z-50 overflow-y-auto"
-    >
+    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen">
         <Dialog.Overlay className="fixed inset-0 bg-black/30" />
 
@@ -28,13 +24,13 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose, user }) 
               <X size={20} />
             </button>
           </div>
-          
+
           <div className="relative px-6 pb-6">
             <div className="relative -top-16 flex justify-center">
               <div className="relative">
                 <img
                   src={user.avatar}
-                  alt={user.name}
+                  alt={user.fullName}
                   className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-750"
                 />
                 <button className="absolute bottom-0 right-0 bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
@@ -44,13 +40,15 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose, user }) 
             </div>
 
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{user.name}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{user.fullName}</h1>
               <p className="text-gray-500 dark:text-gray-400">Online</p>
             </div>
 
             <div className="space-y-6">
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Account Settings</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Account Settings
+                </h2>
                 <div className="space-y-4">
                   <button className="w-full flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                     <UserCircle className="text-gray-500 dark:text-gray-400" size={24} />
@@ -63,13 +61,14 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose, user }) 
                   <button className="w-full flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                     <Lock className="text-gray-500 dark:text-gray-400" size={24} />
                     <span className="ml-3 text-gray-700 dark:text-gray-200">Privacy</span>
-                  
                   </button>
                 </div>
               </div>
 
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Security</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Security
+                </h2>
                 <div className="space-y-4">
                   <button className="w-full flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                     <Key className="text-gray-500 dark:text-gray-400" size={24} />
@@ -77,7 +76,9 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose, user }) 
                   </button>
                   <button className="w-full flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                     <Shield className="text-gray-500 dark:text-gray-400" size={24} />
-                    <span className="ml-3 text-gray-700 dark:text-gray-200">Two-Factor Authentication</span>
+                    <span className="ml-3 text-gray-700 dark:text-gray-200">
+                      Two-Factor Authentication
+                    </span>
                   </button>
                 </div>
               </div>
@@ -86,7 +87,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose, user }) 
         </div>
       </div>
     </Dialog>
-  );
-};
+  )
+}
 
-export default ProfileDialog;
+export default ProfileDialog
