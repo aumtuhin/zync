@@ -11,9 +11,12 @@ import MessageSearchDialog from './MessageSearchDialog'
 import DeleteMessageDialog from './DeleteMessageDialog'
 import AudioCallWindow from './AudioCallWindow'
 import VideoCallWindow from './VideoCallWindow'
+import { Conversation } from '../types/index'
+import { useMessages } from '../hooks/queries/useMessages'
 
 interface ChatAreaProps {
   chat: Chat | null
+  activeConversation: Conversation
   users: User[]
   currentUser: User
   onSendMessage: (content: string) => void
@@ -24,6 +27,7 @@ interface ChatAreaProps {
 
 const ChatArea: React.FC<ChatAreaProps> = ({
   chat,
+  activeConversation,
   users,
   currentUser,
   onSendMessage,
@@ -39,6 +43,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [isDeleteMessageDialogOpen, setIsDeleteMessageDialogOpen] = useState(false)
   const [isAudioCallOpen, setIsAudioCallOpen] = useState(false)
   const [isVideoCallOpen, setIsVideoCallOpen] = useState(false)
+
+  console.log('chat area rendered')
+
+  console.log(activeConversation._id)
+
+  const { data: messagesResponse, isPending } = useMessages(activeConversation._id)
+
+  console.log('messagesResponse', isPending, messagesResponse?.data)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -60,25 +72,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   }
 
-  if (!chat) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-900/30 dark:via-purple-900/30 dark:to-pink-900/30">
-        <div className="text-center p-8 max-w-md">
-          <div className="w-48 h-48 mx-auto mb-6 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-full flex items-center justify-center backdrop-blur-lg">
-            <img
-              src="https://api.dicebear.com/7.x/bottts/svg?seed=random-z"
-              alt="Zync"
-              className="w-32 h-32 object-cover rounded-full opacity-50"
-            />
-          </div>
-          <h2 className="text-2xl font-medium text-gray-800 dark:text-white mb-2">Zync</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Select a chat to start messaging or create a new one.
-          </p>
-        </div>
-      </div>
-    )
-  }
+  if (!chat) return
 
   const otherParticipant = chat.isGroup
     ? undefined

@@ -14,7 +14,6 @@ export const apiClient = axios.create({
 
 // List of endpoints that DON'T require auth
 const PUBLIC_ENDPOINTS = [
-  '/',
   '/otp/request-email',
   '/otp/request-sms',
   '/otp/verify-email',

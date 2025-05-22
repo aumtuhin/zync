@@ -15,7 +15,7 @@ interface SidebarProps {
   currentUser: User
   user: ZUser
   contacts: Contact[]
-  activeChat: Chat | null
+  activeConversation: Conversation | null
   onChatSelect: (chatId: string) => void
   darkMode: boolean
   contactError: string
@@ -34,7 +34,7 @@ const Sidebar = ({
   contacts,
   conversations,
   user,
-  activeChat,
+  activeConversation,
   onChatSelect,
   darkMode,
   setDarkMode,
@@ -114,7 +114,7 @@ const Sidebar = ({
             )
             return (
               <ChatListItem
-                isActive={activeChat?.id === conversation._id}
+                isActive={activeConversation?._id === conversation._id}
                 key={conversation._id}
                 conversation={conversation}
                 recipient={otherParticipant}
@@ -132,7 +132,7 @@ const Sidebar = ({
             )
             return (
               <ChatListItem
-                isActive={activeChat?.id === conversation._id}
+                isActive={activeConversation?._id === conversation._id}
                 key={conversation._id}
                 conversation={conversation}
                 recipient={otherParticipant}

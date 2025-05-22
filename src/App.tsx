@@ -3,13 +3,16 @@ import { useEffect, useState, useMemo } from 'react'
 import Layout from './components/Layout'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
-import { Chat, Message, Theme } from './types'
+import EmptyChatArea from './components/EmptyChatArea'
+
+import { Chat, Theme } from './types'
 import { mockChats, mockUsers, currentUser } from './data/mockData'
 import { chatTheme } from './theme/chat'
 import { useProfile } from './hooks/queries/useProfile'
 import { Contact, Conversation, User } from './types/index'
 import { useAddContact } from './hooks/queries/useContact'
 import { useCreateConversation } from './hooks/queries/useChat'
+import { getConversationById } from './utils/conversation.utils'
 
 function App() {
   const { mutate: mutateAddContact } = useAddContact()
@@ -17,7 +20,11 @@ function App() {
   const { data: response, isPending } = useProfile()
 
   const [activeChat, setActiveChat] = useState<Chat | null>(null)
-  const [activeConversationRecipient, setActiveConversationRecipient] = useState<User | null>(null)
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [contactError, setContactError] = useState<string>('')
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [contactSuccess, setContactSuccess] = useState<string>('')
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null)
   const [chats, setChats] = useState<Chat[]>(mockChats)
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [theme, setTheme] = useState<Theme>(chatTheme)
@@ -29,11 +36,6 @@ function App() {
     [response?.data?.conversations]
   )
 
-  const [contacts, setContacts] = useState<Contact[]>([])
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [contactError, setContactError] = useState<string>('')
-  const [contactSuccess, setContactSuccess] = useState<string>('')
-
   useEffect(() => {
     if (response?.success) {
       setContacts(userContacts)
@@ -41,64 +43,45 @@ function App() {
     }
   }, [response?.success, userContacts, userConversations])
 
-  console.log(conversations)
-
   const handleSendMessage = (content: string) => {
     if (!activeChat) return
+    if (!activeConversation?._id) return
+    if (!user?._id) return
 
-    if (activeConversationRecipient?._id) {
-      mutateCreateConversation(
-        { recipientId: activeConversationRecipient._id, content: content },
-        {
-          onSuccess: (data) => {
-            // Update the local state with the new conversation
-            // remove locally stored conversation
-            const updatedConversations = conversations.filter(
-              (conversation) => conversation._id !== activeConversationRecipient._id
-            )
-            setConversations(updatedConversations)
-            setConversations((prevConversations) => [
-              data.data.conversation,
-              ...prevConversations.filter(
-                (conversation) => conversation._id !== activeConversationRecipient._id
-              )
-            ])
-          },
-          onError: (error) => {
-            console.error('Error creating conversation:', error)
-          }
-        }
-      )
-    }
+    const otherParticipant = getConversationById(conversations, user._id)
+    if (!otherParticipant) return
 
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      content,
-      sender: currentUser.id,
-      timestamp: new Date(),
-      status: 'sent'
-    }
-
-    const updatedChats = chats.map((chat) => {
-      if (chat.id === activeChat.id) {
-        return {
-          ...chat,
-          messages: [...chat.messages, newMessage],
-          lastMessage: newMessage
+    mutateCreateConversation(
+      { recipientId: otherParticipant._id, content: content },
+      {
+        onSuccess: (data) => {
+          // Update the local state with the new conversation
+          // remove locally stored conversation
+          const updatedConversations = conversations.filter(
+            (conversation) => conversation._id !== otherParticipant._id
+          )
+          setConversations(updatedConversations)
+          setConversations((prevConversations) => [
+            data.data.conversation,
+            ...prevConversations.filter((conversation) => conversation._id !== otherParticipant._id)
+          ])
+        },
+        onError: (error) => {
+          console.error('Error creating conversation:', error)
         }
       }
-      return chat
-    })
-
-    setChats(updatedChats)
-    setActiveChat(updatedChats.find((chat) => chat.id === activeChat.id) || null)
+    )
   }
 
-  const handleChatSelect = (chatId: string) => {
-    const selected = chats.find((chat) => chat.id === chatId) || null
+  const handleChatSelect = (conversationId: string) => {
+    const activeConv = getConversationById(conversations, conversationId)
+    if (activeConv) {
+      setActiveConversation(activeConv)
+    }
+    const selected = chats.find((chat) => chat.id === conversationId) || null
     if (selected && selected.unreadCount) {
       const updatedChats = chats.map((chat) =>
-        chat.id === chatId ? { ...chat, unreadCount: 0 } : chat
+        chat.id === conversationId ? { ...chat, unreadCount: 0 } : chat
       )
       setChats(updatedChats)
       setActiveChat({ ...selected, unreadCount: 0 })
@@ -108,20 +91,20 @@ function App() {
   }
 
   const handleCreateChat = (recipient: User) => {
-    const existingChat = conversations.find((chat) =>
+    const existingConversation = conversations.find((chat) =>
       chat.participants.some((participant) => participant._id === recipient._id)
     )
 
-    if (existingChat) {
+    if (existingConversation) {
       setConversations((prevConversations) => [
-        existingChat,
-        ...prevConversations.filter((chat) => chat._id !== existingChat._id)
+        existingConversation,
+        ...prevConversations.filter((chat) => chat._id !== existingConversation._id)
       ])
-      setActiveConversationRecipient(recipient)
+      setActiveConversation(existingConversation)
       return
     }
 
-    if (!existingChat && user) {
+    if (!existingConversation && user) {
       const newConversation = {
         _id: recipient._id,
         participants: [user, recipient],
@@ -130,18 +113,8 @@ function App() {
         lastMessage: ''
       }
       setConversations((prevConversations) => [newConversation, ...prevConversations])
-      setActiveConversationRecipient(recipient)
+      setActiveConversation(newConversation)
     }
-
-    const newChat: Chat = {
-      id: `chat-${Date.now()}`,
-      participants: [currentUser.id, recipient._id],
-      messages: [],
-      unreadCount: 0
-    }
-
-    setChats([newChat, ...chats])
-    setActiveChat(newChat)
   }
 
   const handleAddContact = (name: string, email?: string, phone?: string) => {
@@ -223,7 +196,7 @@ function App() {
               user={user}
               contacts={contacts}
               onChatSelect={handleChatSelect}
-              activeChat={activeChat}
+              activeConversation={activeConversation}
               darkMode={darkMode}
               setDarkMode={setDarkMode}
               onCreateChat={handleCreateChat}
@@ -237,15 +210,20 @@ function App() {
             />
           }
           content={
-            <ChatArea
-              chat={activeChat}
-              users={mockUsers}
-              currentUser={currentUser}
-              onSendMessage={handleSendMessage}
-              onDeleteChat={handleDeleteChat}
-              onDeleteMessage={handleDeleteMessage}
-              theme={theme}
-            />
+            activeConversation ? (
+              <ChatArea
+                chat={activeChat}
+                activeConversation={activeConversation}
+                users={mockUsers}
+                currentUser={currentUser}
+                onSendMessage={handleSendMessage}
+                onDeleteChat={handleDeleteChat}
+                onDeleteMessage={handleDeleteMessage}
+                theme={theme}
+              />
+            ) : (
+              <EmptyChatArea />
+            )
           }
         />
       )}

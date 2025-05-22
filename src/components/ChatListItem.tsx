@@ -25,8 +25,8 @@ const ChatListItem = ({
 
   return (
     <div
-      className={`flex items-center px-4 py-3 cursor-pointer border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors ${
-        isActive ? 'bg-gray-100 dark:bg-gray-750' : ''
+      className={`flex items-center px-4 py-3 cursor-pointer border-b border-gray-100 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-750 transition-colors ${
+        isActive ? 'bg-gray-200 dark:bg-gray-750' : ''
       }`}
       onClick={onClick}
     >
