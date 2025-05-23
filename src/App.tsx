@@ -15,8 +15,10 @@ import { getConversationById, getOtherParticipant } from './utils/conversation.u
 import { Theme } from './types'
 import { mockUsers } from './data/mockData'
 import { chatTheme } from './theme/chat'
+import { useSocket } from './hooks/useSocket'
 
 function App() {
+  const socket = useSocket()
   const { mutate: mutateAddContact } = useAddContact()
   const { mutate: mutateCreateConversation, isPending: isPendingCreateConv } =
     useCreateConversation()
@@ -48,12 +50,37 @@ function App() {
     }
   }, [response?.success, userContacts, userConversations, lastActiveConversation])
 
+  useEffect(() => {
+    if (!socket) return
+    if (user) {
+      socket.emit('authenticate', user._id)
+    }
+
+    socket.on('receive_message', (message) => {
+      if (!message) return
+      setNewMessage(message)
+    })
+
+    return () => {
+      socket.off('authenticate')
+      socket.off('receive_message')
+    }
+  }, [user, socket])
+
   const handleSendMessage = (content: string) => {
     if (!activeConversation?._id) return
     if (!user?._id) return
 
     const otherParticipant = getOtherParticipant(activeConversation, user._id)
     if (!otherParticipant) return
+
+    if (socket) {
+      socket.emit('send_message', {
+        senderId: user._id,
+        recipientId: otherParticipant._id,
+        content
+      })
+    }
 
     mutateSendMessage(
       { recipientId: otherParticipant._id, content: content },

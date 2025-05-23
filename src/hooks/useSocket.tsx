@@ -1,18 +1,32 @@
-// Example React hook
-import { useEffect, useState } from 'react'
-import { initSocket, getSocket } from '../libs/socket.lib'
+// useSocket.ts
+import { useEffect, useRef } from 'react'
+import { io, Socket } from 'socket.io-client'
+import { tokenStorage } from '../utils/auth.utils'
+
+const SOCKET_URL = 'http://localhost:8000'
 
 export const useSocket = () => {
-  const [socket, setSocket] = useState<ReturnType<typeof getSocket>>()
+  const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
-    const newSocket = initSocket()
-    setSocket(newSocket)
+    const token = tokenStorage.getToken()
+
+    const socket = io(SOCKET_URL, {
+      transports: ['websocket'],
+      auth: { token },
+      withCredentials: true
+    })
+
+    socketRef.current = socket
+
+    socket.on('connect', () => console.log('Connected to socket'))
+    socket.on('disconnect', () => console.log('Disconnected from socket'))
+    socket.on('error', (err) => console.error('Socket error:', err))
 
     return () => {
-      newSocket.disconnect()
+      socket.disconnect()
     }
   }, [])
 
-  return socket
+  return socketRef.current
 }
