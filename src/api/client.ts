@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { tokenStorage } from '../utils/auth.utils'
 
-const BASE_URL = import.meta.env.API_BASE_URL
+const BASE_URL = 'https://node-auth-o7rd.onrender.com/api/v1'
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -36,31 +36,31 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 })
 
 // Response Interceptor – handle 401 and attempt refresh
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+// apiClient.interceptors.response.use(
+//   (response) => response,
+//   async (error: AxiosError) => {
+//     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
+//     if (error.response?.status === 401 && !originalRequest._retry) {
+//       originalRequest._retry = true
 
-      try {
-        const refreshResponse = await apiClient.post('/auth/refresh-token')
-        const newToken = (refreshResponse.data as { accessToken: string }).accessToken
+//       try {
+//         const refreshResponse = await apiClient.post('/auth/refresh-token')
+//         const newToken = (refreshResponse.data as { accessToken: string }).accessToken
 
-        tokenStorage.setToken(newToken)
+//         tokenStorage.setToken(newToken)
 
-        originalRequest.headers = originalRequest.headers || {}
-        originalRequest.headers.Authorization = `Bearer ${newToken}`
+//         originalRequest.headers = originalRequest.headers || {}
+//         originalRequest.headers.Authorization = `Bearer ${newToken}`
 
-        return apiClient(originalRequest)
-      } catch (refreshError: unknown) {
-        tokenStorage.clearTokens()
-        window.location.href = '/'
-        return Promise.reject(refreshError)
-      }
-    }
+//         return apiClient(originalRequest)
+//       } catch (refreshError: unknown) {
+//         tokenStorage.clearTokens()
+//         window.location.href = '/'
+//         return Promise.reject(refreshError)
+//       }
+//     }
 
-    return Promise.reject(error)
-  }
-)
+//     return Promise.reject(error)
+//   }
+// )
