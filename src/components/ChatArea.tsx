@@ -80,7 +80,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   }
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' })
   }, [messages])
 
   const handleMessageDelete = (message: Message) => {

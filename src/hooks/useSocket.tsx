@@ -1,32 +1,24 @@
 // useSocket.ts
-import { useEffect, useRef } from 'react'
-import { io, Socket } from 'socket.io-client'
-import { tokenStorage } from '../utils/auth.utils'
-
-const SOCKET_URL = 'http://localhost:8000'
+import { useEffect } from 'react'
+import socket from '../lib/socket.lib'
 
 export const useSocket = () => {
-  const socketRef = useRef<Socket | null>(null)
-
   useEffect(() => {
-    const token = tokenStorage.getToken()
+    const handleConnect = () => console.log('Connected to socket')
+    const handleDisconnect = () => console.log('Disconnected from socket')
+    const handleReconnect = () => console.log('Reconnected to socket')
+    const handleError = (err: Error) => console.error('Socket error:', err)
 
-    const socket = io(SOCKET_URL, {
-      transports: ['websocket'],
-      auth: { token },
-      withCredentials: true
-    })
-
-    socketRef.current = socket
-
-    socket.on('connect', () => console.log('Connected to socket'))
-    socket.on('disconnect', () => console.log('Disconnected from socket'))
-    socket.on('error', (err) => console.error('Socket error:', err))
+    socket.on('connect', handleConnect)
+    socket.on('reconnect', handleReconnect)
+    socket.on('disconnect', handleDisconnect)
+    socket.on('error', handleError)
 
     return () => {
-      socket.disconnect()
+      socket.off('connect', handleConnect)
+      socket.off('disconnect', handleDisconnect)
+      socket.off('reconnect', handleReconnect)
+      socket.off('error', handleError)
     }
   }, [])
-
-  return socketRef.current
 }

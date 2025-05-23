@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog } from '@headlessui/react';
-import { Search, X, ArrowDown } from 'lucide-react';
-import { Message, User } from '../types';
-import { formatMessageTime } from '../utils/dateUtils';
+import React, { useState, useEffect } from 'react'
+import { Dialog } from '@headlessui/react'
+import { Search, X, ArrowDown } from 'lucide-react'
+import { Message, User } from '../types'
+import { formatMessageTime } from '../utils/dateUtils'
 
 interface MessageSearchDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  messages: Message[];
-  users: User[];
-  onScrollToMessage: (messageId: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  messages: Message[]
+  users: User[]
+  onScrollToMessage: (messageId: string) => void
 }
 
 const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
@@ -17,39 +17,39 @@ const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
   onClose,
   messages,
   users,
-  onScrollToMessage,
+  onScrollToMessage
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredMessages, setFilteredMessages] = useState<Message[]>([]);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredMessages, setFilteredMessages] = useState<Message[]>([])
 
   useEffect(() => {
     if (searchQuery.trim()) {
-      const filtered = messages.filter(message =>
+      const filtered = messages.filter((message) =>
         message.content.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredMessages(filtered);
+      )
+      setFilteredMessages(filtered)
     } else {
-      setFilteredMessages([]);
+      setFilteredMessages([])
     }
-  }, [searchQuery, messages]);
+  }, [searchQuery, messages])
 
   const highlightText = (text: string) => {
-    if (!searchQuery.trim()) return text;
+    if (!searchQuery.trim()) return text
 
-    const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
-    return parts.map((part, index) => 
+    const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'))
+    return parts.map((part, index) =>
       part.toLowerCase() === searchQuery.toLowerCase() ? (
-        <span key={index} className="bg-yellow-200 dark:bg-yellow-600">{part}</span>
-      ) : part
-    );
-  };
+        <span key={index} className="bg-yellow-200 dark:bg-yellow-600">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    )
+  }
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="fixed inset-0 z-50 overflow-y-auto"
-    >
+    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen">
         <Dialog.Overlay className="fixed inset-0 bg-black/30" />
 
@@ -76,18 +76,21 @@ const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
               />
-              <Search className="absolute left-3 top-2.5 text-gray-500 dark:text-gray-400" size={18} />
+              <Search
+                className="absolute left-3 top-2.5 text-gray-500 dark:text-gray-400"
+                size={18}
+              />
             </div>
 
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {filteredMessages.map(message => {
-                const sender = users.find(user => user.id === message.sender);
+              {filteredMessages.map((message) => {
+                const sender = users.find((user) => user.id === message.sender)
                 return (
                   <button
                     key={message.id}
                     onClick={() => {
-                      onScrollToMessage(message.id);
-                      onClose();
+                      onScrollToMessage(message.id)
+                      onClose()
                     }}
                     className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors group"
                   >
@@ -102,21 +105,22 @@ const MessageSearchDialog: React.FC<MessageSearchDialogProps> = ({
                     <p className="text-sm text-gray-700 dark:text-gray-300">
                       {highlightText(message.content)}
                     </p>
-                    <ArrowDown className="hidden group-hover:block absolute right-2 bottom-2 text-gray-400" size={16} />
+                    <ArrowDown
+                      className="hidden group-hover:block absolute right-2 bottom-2 text-gray-400"
+                      size={16}
+                    />
                   </button>
-                );
+                )
               })}
               {searchQuery && filteredMessages.length === 0 && (
-                <p className="text-center text-gray-500 dark:text-gray-400">
-                  No messages found
-                </p>
+                <p className="text-center text-gray-500 dark:text-gray-400">No messages found</p>
               )}
             </div>
           </div>
         </div>
       </div>
     </Dialog>
-  );
-};
+  )
+}
 
-export default MessageSearchDialog;
+export default MessageSearchDialog

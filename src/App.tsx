@@ -9,20 +9,21 @@ import { useProfile } from './hooks/queries/useProfile'
 import { Contact, Conversation, Message, User } from './types/index'
 import { useAddContact } from './hooks/queries/useContact'
 import { useCreateConversation } from './hooks/queries/useChat'
-import { useSendMessage } from './hooks/queries/useMessages'
+import { useSocket } from './hooks/useSocket'
+import { useMessageSocket } from './hooks/useMessageSocket'
 
+import socket from './lib/socket.lib'
 import { getConversationById, getOtherParticipant } from './utils/conversation.utils'
+import { playSound, stopSound } from './utils/sound.utils'
 import { Theme } from './types'
 import { mockUsers } from './data/mockData'
 import { chatTheme } from './theme/chat'
-import { useSocket } from './hooks/useSocket'
+import messageReceiveTone from './assets/sounds/message_receive.mp3'
 
 function App() {
-  const socket = useSocket()
   const { mutate: mutateAddContact } = useAddContact()
   const { mutate: mutateCreateConversation, isPending: isPendingCreateConv } =
     useCreateConversation()
-  const { mutate: mutateSendMessage } = useSendMessage()
   const { data: response, isPending } = useProfile()
 
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -50,22 +51,30 @@ function App() {
     }
   }, [response?.success, userContacts, userConversations, lastActiveConversation])
 
+  useSocket()
+
   useEffect(() => {
     if (!socket) return
     if (user) {
       socket.emit('authenticate', user._id)
     }
 
-    socket.on('receive_message', (message) => {
-      if (!message) return
-      setNewMessage(message)
-    })
-
     return () => {
       socket.off('authenticate')
-      socket.off('receive_message')
     }
   }, [user, socket])
+
+  useMessageSocket((msg: Message | null) => {
+    console.log('Received message:', msg)
+    if (!msg) return msg
+    if (msg?.sender._id !== user?._id) {
+      playSound(messageReceiveTone)
+      stopSound(new Audio(messageReceiveTone))
+      return
+    }
+    // todo handle failed or retry based on response
+    setNewMessage(msg as Message)
+  })
 
   const handleSendMessage = (content: string) => {
     if (!activeConversation?._id) return
@@ -81,16 +90,6 @@ function App() {
         content
       })
     }
-
-    mutateSendMessage(
-      { recipientId: otherParticipant._id, content: content },
-      {
-        onSuccess: (data) => {
-          const newMessage: Message = data.data.message
-          setNewMessage(newMessage)
-        }
-      }
-    )
   }
 
   const handleChatSelect = (conversationId: string) => {
