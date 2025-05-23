@@ -1,10 +1,10 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import axios, { InternalAxiosRequestConfig } from 'axios'
 import { tokenStorage } from '../utils/auth.utils'
 
-const BASE_URL = 'https://node-auth-o7rd.onrender.com/api/v1'
+const apiUrl = import.meta.env.VITE_API_URL
 
 export const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: apiUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

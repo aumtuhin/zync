@@ -1,13 +1,13 @@
 import { io } from 'socket.io-client'
 import { tokenStorage } from '../utils/auth.utils'
 
-const SOCKET_URL = 'https://node-auth-o7rd.onrender.com'
+const socketUrl = import.meta.env.VITE_SOCKET_URL
 
-console.log('Socket URL:', SOCKET_URL)
+console.log('Socket URL:', socketUrl)
 
 const token = tokenStorage.getToken()
 
-const socket = io(SOCKET_URL, {
+const socket = io(socketUrl, {
   transports: ['websocket'],
   auth: { token },
   withCredentials: true

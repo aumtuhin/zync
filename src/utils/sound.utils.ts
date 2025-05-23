@@ -1,4 +1,11 @@
+let userInteracted = false
+
+window.addEventListener('click', () => {
+  userInteracted = true
+})
+
 export const playSound = (sound: string) => {
+  if (!userInteracted) return
   const audio = new Audio(sound)
   audio.play()
 }

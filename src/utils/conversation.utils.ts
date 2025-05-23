@@ -7,3 +7,7 @@ export const getConversationById = (conversations: Conversation[], conversationI
 export const getOtherParticipant = (conversation: Conversation, currentUserId: string) => {
   return conversation.participants.find((participant) => participant._id !== currentUserId)
 }
+
+export const isConversationExisting = (conversations: Conversation[], conversationId: string) => {
+  return conversations.some((conversation) => conversation._id === conversationId)
+}

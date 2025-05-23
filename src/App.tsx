@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Layout from './components/Layout'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
@@ -13,7 +14,11 @@ import { useSocket } from './hooks/useSocket'
 import { useMessageSocket } from './hooks/useMessageSocket'
 
 import socket from './lib/socket.lib'
-import { getConversationById, getOtherParticipant } from './utils/conversation.utils'
+import {
+  getConversationById,
+  getOtherParticipant,
+  isConversationExisting
+} from './utils/conversation.utils'
 import { playSound, stopSound } from './utils/sound.utils'
 import { Theme } from './types'
 import { mockUsers } from './data/mockData'
@@ -30,26 +35,23 @@ function App() {
   const [contactError, setContactError] = useState<string>('')
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [newMessage, setNewMessage] = useState<Message>()
-  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null)
+  const [activeConversation, setActiveConversation] = useState<Conversation | undefined>()
   const [contactSuccess, setContactSuccess] = useState<string>('')
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [theme, setTheme] = useState<Theme>(chatTheme)
 
   const user = response?.data.user
-  const lastActiveConversation = user?.lastActiveConversation
-  const userContacts = useMemo(() => response?.data?.contacts || [], [response?.data?.contacts])
-  const userConversations = useMemo(
-    () => response?.data?.conversations || [],
-    [response?.data?.conversations]
-  )
+
+  const hasInitialized = useRef(false)
 
   useEffect(() => {
-    if (response?.success && lastActiveConversation) {
-      setContacts(userContacts)
-      setConversations(userConversations)
-      setActiveConversation(lastActiveConversation)
+    if (response?.success && !hasInitialized.current) {
+      setContacts(response?.data.contacts || [])
+      setConversations(response?.data.conversations || [])
+      setActiveConversation(user?.lastActiveConversation)
+      hasInitialized.current = true
     }
-  }, [response?.success, userContacts, userConversations, lastActiveConversation])
+  }, [response?.success])
 
   useSocket()
 
@@ -64,16 +66,38 @@ function App() {
     }
   }, [user, socket])
 
-  useMessageSocket((msg: Message | null) => {
-    console.log('Received message:', msg)
-    if (!msg) return msg
-    if (msg?.sender._id !== user?._id) {
+  useMessageSocket((response) => {
+    if (!response) return
+    const existingConversation = isConversationExisting(
+      conversations,
+      response.message.conversation
+    )
+    if (!existingConversation) {
+      setConversations((prevConv) => [response.conversation!, ...prevConv])
+    }
+
+    setConversations((prevConversations) => {
+      const newConv = response?.conversation
+      if (!newConv) return prevConversations
+
+      const index = prevConversations.findIndex((c) => String(c._id) === String(newConv._id))
+
+      if (index !== -1) {
+        const updated = [...prevConversations]
+        updated[index] = newConv
+        return updated
+      } else {
+        return [newConv, ...prevConversations]
+      }
+    })
+
+    if (response?.message.sender._id !== user?._id) {
       playSound(messageReceiveTone)
       stopSound(new Audio(messageReceiveTone))
-      return
     }
+
     // todo handle failed or retry based on response
-    setNewMessage(msg as Message)
+    setNewMessage(response.message)
   })
 
   const handleSendMessage = (content: string) => {
@@ -139,6 +163,7 @@ function App() {
       {
         onSuccess: (data: any) => {
           setContactError('')
+          console.log('Contact added successfully:', data)
           setContactSuccess(data.data.message)
           setContacts((prevContacts) => [...prevContacts, data.data.contact])
         },
@@ -152,7 +177,7 @@ function App() {
   }
 
   const onSearchContacts = (query: string) => {
-    const filteredContacts = userContacts.filter((contact) =>
+    const filteredContacts = contacts.filter((contact) =>
       contact.nickname?.toLowerCase().includes(query.toLowerCase())
     )
     setContacts(filteredContacts)
@@ -191,7 +216,7 @@ function App() {
             <Sidebar
               currentUser={user}
               user={user}
-              contacts={contacts}
+              contacts={response?.data.contacts}
               onChatSelect={handleChatSelect}
               activeConversation={activeConversation}
               darkMode={darkMode}

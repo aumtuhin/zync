@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import socket from '../lib/socket.lib'
-import { Message } from '../types/index'
+import { SendMessageResponse } from '../types/index'
 
-export const useMessageSocket = (onMessageReceived: (msg: Message) => void) => {
+export const useMessageSocket = (onMessageReceived: (response: SendMessageResponse) => void) => {
   useEffect(() => {
     socket.on('receive_message', onMessageReceived)
 

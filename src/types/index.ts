@@ -66,3 +66,8 @@ export interface MessageResponse {
     conversation?: Conversation
   }
 }
+
+export interface SendMessageResponse {
+  message: Message
+  conversation?: Conversation
+}

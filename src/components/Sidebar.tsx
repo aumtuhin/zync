@@ -13,7 +13,7 @@ interface SidebarProps {
   currentUser: User
   user: User
   contacts: Contact[]
-  activeConversation: Conversation | null
+  activeConversation?: Conversation
   onChatSelect: (chatId: string) => void
   darkMode: boolean
   contactError: string
@@ -65,6 +65,8 @@ const Sidebar = ({
     return filteredConv
   }
 
+  console.log(contacts)
+
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -110,9 +112,11 @@ const Sidebar = ({
         {isPendingCreateConv && <div className="loading">Creating...</div>}
         {conversations.map((conversation) => {
           const otherParticipant = getOtherParticipant(conversation.participants, user._id)
+
           const contact = contacts.find(
             (contact) => contact.recipient._id === otherParticipant?._id
           )
+
           return (
             <ChatListItem
               isActive={activeConversation?._id === conversation._id}
