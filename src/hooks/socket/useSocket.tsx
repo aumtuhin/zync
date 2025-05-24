@@ -1,6 +1,6 @@
 // useSocket.ts
 import { useEffect } from 'react'
-import socket from '../lib/socket.lib'
+import socket from '../../lib/socket.lib'
 
 export const useSocket = () => {
   useEffect(() => {

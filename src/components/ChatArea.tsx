@@ -3,7 +3,7 @@ import ProfileHeader from './ProfileHeader'
 import MessageBubble from './MessageBubble'
 import MessageInput from './MessageInput'
 import { Phone, Video, MoreVertical, Trash2, Search } from 'lucide-react'
-import StatusDot from './StatusDot'
+// import StatusDot from './StatusDot'
 import DeleteChatDialog from './DeleteChatDialog'
 import MessageSearchDialog from './MessageSearchDialog'
 import DeleteMessageDialog from './DeleteMessageDialog'
@@ -127,10 +127,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           nickname={contact?.nickname || otherParticipant?.fullName}
           actions={
             <div className="flex items-center space-x-4">
-              {otherParticipant && (
-                <div className="flex items-center mr-2">
-                  <StatusDot status="online" />
-                </div>
+              {otherParticipant.status && (
+                <div className="flex items-center mr-2">{otherParticipant.status}</div>
               )}
               <button
                 onClick={() => setIsSearchOpen(true)}

@@ -10,7 +10,6 @@ import { getOtherParticipant } from '../utils/user.utils'
 import { SearchConversation } from './SearchConversation'
 
 interface SidebarProps {
-  currentUser: User
   user: User
   contacts: Contact[]
   activeConversation?: Conversation
@@ -30,7 +29,6 @@ interface SidebarProps {
 }
 
 const Sidebar = ({
-  currentUser,
   contacts,
   conversations,
   user,
@@ -65,8 +63,6 @@ const Sidebar = ({
     return filteredConv
   }
 
-  console.log(contacts)
-
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -81,7 +77,9 @@ const Sidebar = ({
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{user.fullName}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Online</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {user.status ? user.status : 'Away'}
+            </p>
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -122,7 +120,7 @@ const Sidebar = ({
               isActive={activeConversation?._id === conversation._id}
               key={conversation._id}
               conversation={conversation}
-              recipient={otherParticipant}
+              recipient={contact?.recipient || otherParticipant}
               nickname={contact?.nickname}
               onClick={() => onChatSelect(conversation._id)}
             />
@@ -172,7 +170,7 @@ const Sidebar = ({
       <SettingsDialog
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        currentUser={currentUser}
+        currentUser={user}
         user={user}
         darkMode={darkMode}
         setDarkMode={setDarkMode}

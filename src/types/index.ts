@@ -5,6 +5,7 @@ export interface Conversation {
   unreadCount?: number | null
   lastMessage?: string
 }
+
 export interface User {
   _id: string
   email: string
@@ -16,6 +17,8 @@ export interface User {
   username: string
   contacts: Contact[]
   lastActiveConversation?: Conversation
+  status?: string
+  lastSeen?: Date
 }
 
 export interface Contact {

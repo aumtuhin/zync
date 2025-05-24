@@ -1,17 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Layout from './components/Layout'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
 import EmptyChatArea from './components/EmptyChatArea'
 
 import { useProfile } from './hooks/queries/useProfile'
-import { Contact, Conversation, Message, User } from './types/index'
 import { useAddContact } from './hooks/queries/useContact'
 import { useCreateConversation } from './hooks/queries/useChat'
-import { useSocket } from './hooks/useSocket'
-import { useMessageSocket } from './hooks/useMessageSocket'
+import { useSocket } from './hooks/socket/useSocket'
+import { useMessageSocket } from './hooks/socket/useMessageSocket'
+import { useStatusUpdate } from './hooks/socket/useStatusUpdate'
 
 import socket from './lib/socket.lib'
 import {
@@ -20,6 +20,7 @@ import {
   isConversationExisting
 } from './utils/conversation.utils'
 import { playSound, stopSound } from './utils/sound.utils'
+import { Contact, Conversation, Message, User } from './types/index'
 import { Theme } from './types'
 import { mockUsers } from './data/mockData'
 import { chatTheme } from './theme/chat'
@@ -31,6 +32,7 @@ function App() {
     useCreateConversation()
   const { data: response, isPending } = useProfile()
 
+  const [user, setUser] = useState<User>()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [contactError, setContactError] = useState<string>('')
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -40,16 +42,13 @@ function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [theme, setTheme] = useState<Theme>(chatTheme)
 
-  const user = response?.data.user
-
-  const hasInitialized = useRef(false)
-
   useEffect(() => {
-    if (response?.success && !hasInitialized.current) {
-      setContacts(response?.data.contacts || [])
-      setConversations(response?.data.conversations || [])
-      setActiveConversation(user?.lastActiveConversation)
-      hasInitialized.current = true
+    if (response?.success) {
+      const userData = response.data.user
+      setUser(userData)
+      setContacts(response.data.contacts || [])
+      setConversations(response.data.conversations || [])
+      setActiveConversation(userData.lastActiveConversation || undefined)
     }
   }, [response?.success])
 
@@ -98,6 +97,29 @@ function App() {
 
     // todo handle failed or retry based on response
     setNewMessage(response.message)
+  })
+
+  useStatusUpdate(({ userId, status }: { userId: string; status: string }) => {
+    console.log('Status update received:', userId, status)
+    setUser((prev) => {
+      if (!prev || prev._id !== userId || prev.status === status) return prev
+      return { ...prev, status }
+    })
+    // Update the status of the contact in the contacts list
+    setContacts((prevContacts) => {
+      return prevContacts.map((contact) => {
+        if (contact.recipient._id === userId) {
+          return {
+            ...contact,
+            recipient: {
+              ...contact.recipient,
+              status
+            }
+          }
+        }
+        return contact
+      })
+    })
   })
 
   const handleSendMessage = (content: string) => {
@@ -163,7 +185,6 @@ function App() {
       {
         onSuccess: (data: any) => {
           setContactError('')
-          console.log('Contact added successfully:', data)
           setContactSuccess(data.data.message)
           setContacts((prevContacts) => [...prevContacts, data.data.contact])
         },
@@ -214,9 +235,8 @@ function App() {
         <Layout
           sidebar={
             <Sidebar
-              currentUser={user}
               user={user}
-              contacts={response?.data.contacts}
+              contacts={contacts}
               onChatSelect={handleChatSelect}
               activeConversation={activeConversation}
               darkMode={darkMode}

@@ -22,6 +22,9 @@ const ChatListItem = ({
   const avatar = recipient?.avatar
   const lastMessage = conversation.lastMessage
   const timeStamp = new Date()
+  const status = recipient?.status?.toString().toLocaleLowerCase()
+
+  console.log(recipient)
 
   return (
     <div
@@ -32,7 +35,7 @@ const ChatListItem = ({
     >
       <div className="relative">
         <img src={avatar} alt={nickname} className="w-12 h-12 rounded-full object-cover" />
-        <StatusDot status="online" className="absolute bottom-0 right-0" />
+        {status && <StatusDot status={status} className="absolute bottom-0 right-0" />}
       </div>
 
       <div className="flex-1 min-w-0 ml-3">

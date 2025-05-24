@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import socket from '../lib/socket.lib'
-import { SendMessageResponse } from '../types/index'
+import socket from '../../lib/socket.lib'
+import { SendMessageResponse } from '../../types/index'
 
 export const useMessageSocket = (onMessageReceived: (response: SendMessageResponse) => void) => {
   useEffect(() => {
