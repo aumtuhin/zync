@@ -50,7 +50,10 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
-        <RouterProvider future={{ v7_startTransition: true }} router={router} />
+        <RouterProvider
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          router={router}
+        />
       </ErrorBoundary>{' '}
     </QueryClientProvider>
   </StrictMode>

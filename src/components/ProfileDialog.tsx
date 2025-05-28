@@ -1,6 +1,6 @@
 import React from 'react'
 import { Dialog } from '@headlessui/react'
-import { Camera, Bell, Lock, Key, Shield, UserCircle, X } from 'lucide-react'
+import { Camera, Bell, Key, Shield, UserCircle, X } from 'lucide-react'
 import { User } from '../types/index'
 
 interface ProfileDialogProps {
@@ -57,10 +57,6 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ isOpen, onClose, user }) 
                   <button className="w-full flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                     <Bell className="text-gray-500 dark:text-gray-400" size={24} />
                     <span className="ml-3 text-gray-700 dark:text-gray-200">Notifications</span>
-                  </button>
-                  <button className="w-full flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                    <Lock className="text-gray-500 dark:text-gray-400" size={24} />
-                    <span className="ml-3 text-gray-700 dark:text-gray-200">Privacy</span>
                   </button>
                 </div>
               </div>

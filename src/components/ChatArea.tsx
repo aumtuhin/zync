@@ -16,7 +16,6 @@ import { useMessages } from '../hooks/queries/useMessages'
 
 // import { formatUserLastSeen } from '../utils/dateUtils'
 import { getOtherParticipant } from '../utils/conversation.utils'
-import { getContactById } from '../utils/user.utils'
 import { Conversation } from '../types/index'
 import { User, Theme } from '../types'
 import { User as ZUser, Message } from '../types/index'
@@ -59,8 +58,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [messages, setMessages] = useState<Message[]>([])
 
   const { contacts } = useContactsStore((state) => state)
-
-  console.log(contacts)
 
   const { data: messagesResponse, isPending } = useMessages(activeConversation._id)
 
@@ -107,7 +104,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   if (!mockChat) return
 
   const otherParticipant = getOtherParticipant(activeConversation, currentUser._id)
-  const contact = getContactById(contacts, otherParticipant?._id)
+  const contact = contacts.find((contact) => contact.recipient._id === otherParticipant?._id)
+
+  console.log(activeConversation)
 
   const chatBackgroundStyle = theme.chatBackground
     ? {
@@ -132,8 +131,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           nickname={contact?.nickname || otherParticipant?.fullName}
           actions={
             <div className="flex items-center space-x-4">
-              {otherParticipant.status && (
-                <div className="flex items-center mr-2">{otherParticipant.status}</div>
+              {contact && (
+                <div className="flex items-center mr-2">
+                  {contact?.recipient.status || otherParticipant.status}
+                </div>
               )}
               <button
                 onClick={() => setIsSearchOpen(true)}
