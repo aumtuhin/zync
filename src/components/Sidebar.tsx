@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Theme } from '../types'
-import { Contact, Conversation, User } from '../types/index'
+import { Conversation, User } from '../types/index'
 import { PlusCircle, Settings, Sun, Moon, UserPlus } from 'lucide-react'
 import ChatListItem from './ChatListItem'
 import NewChatDialog from './NewChatDialog'
@@ -8,10 +8,10 @@ import SettingsDialog from './SettingsDialog'
 import AddContactDialog from './AddContactDialog'
 import { getOtherParticipant } from '../utils/user.utils'
 import { SearchConversation } from './SearchConversation'
+import { useProfileStore } from '../store/useProfile'
+import { useContactsStore } from '../store/useContacts'
 
 interface SidebarProps {
-  user: User
-  contacts: Contact[]
   activeConversation?: Conversation
   onChatSelect: (chatId: string) => void
   darkMode: boolean
@@ -29,9 +29,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({
-  contacts,
   conversations,
-  user,
   activeConversation,
   isPendingCreateConv,
   onChatSelect,
@@ -49,6 +47,10 @@ const Sidebar = ({
   const [isAddContactOpen, setIsAddContactOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
+  const { user } = useProfileStore((state) => state)
+
+  const { contacts } = useContactsStore((state) => state)
+
   const searchConversations = (query: string) => {
     // todo: implement search conversations properly
     setSearchQuery(query)
@@ -61,6 +63,14 @@ const Sidebar = ({
       conversation.participants.some((p) => matchingRecipientIds.includes(p._id))
     )
     return filteredConv
+  }
+
+  if (!user) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <p className="text-gray-500 dark:text-gray-400">Loading user data...</p>
+      </div>
+    )
   }
 
   return (

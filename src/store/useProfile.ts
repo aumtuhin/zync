@@ -12,26 +12,7 @@ type Actions = {
 }
 
 const initialState: State = {
-  user: {
-    _id: '',
-    email: '',
-    phone: '',
-    fullName: '',
-    avatar: '',
-    contacts: [],
-    isProfileCompleted: false,
-    isVerified: true,
-    username: '',
-    lastActiveConversation: {
-      _id: '',
-      participants: [],
-      messages: [],
-      unreadCount: 0,
-      lastMessage: ''
-    },
-    status: '',
-    lastSeen: new Date()
-  }
+  user: {} as User
 }
 
 export const useProfileStore = create<State & Actions>()(

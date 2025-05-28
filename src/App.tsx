@@ -16,6 +16,7 @@ import { useStatusUpdate } from './hooks/socket/useStatusUpdate'
 
 //store
 import { useProfileStore } from './store/useProfile'
+import { useContactsStore } from './store/useContacts'
 
 import socket from './lib/socket.lib'
 import {
@@ -24,7 +25,7 @@ import {
   isConversationExisting
 } from './utils/conversation.utils'
 import { playSound, stopSound } from './utils/sound.utils'
-import { Contact, Conversation, Message, User } from './types/index'
+import { Conversation, Message, User } from './types/index'
 import { Theme } from './types'
 import { mockUsers } from './data/mockData'
 import { chatTheme } from './theme/chat'
@@ -46,8 +47,6 @@ function App() {
     })
   }
 
-  const [user, setUser] = useState<User>()
-  const [contacts, setContacts] = useState<Contact[]>([])
   const [contactError, setContactError] = useState<string>('')
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [newMessage, setNewMessage] = useState<Message>()
@@ -56,16 +55,16 @@ function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [theme, setTheme] = useState<Theme>(chatTheme)
 
-  const { loadUser } = useProfileStore((state) => state)
+  const { loadUser, user, updateStatus } = useProfileStore((state) => state)
+  const { loadContacts, contacts, addContact, searchContacts, updateContactStatus } =
+    useContactsStore((state) => state)
 
   useEffect(() => {
     if (response?.success) {
       const userData = response?.data?.user
-      if (userData) {
-        loadUser(userData)
-      }
-      setUser(userData)
-      setContacts(response.data.contacts || [])
+      const contactsData = response?.data?.contacts || []
+      loadUser(userData)
+      loadContacts(contactsData)
       setConversations(response.data.conversations || [])
       setActiveConversation(userData.lastActiveConversation || undefined)
     }
@@ -75,9 +74,8 @@ function App() {
 
   useEffect(() => {
     if (!socket) return
-    if (user) {
-      socket.emit('authenticate', user._id)
-    }
+    if (!user._id) return
+    socket.emit('authenticate', user._id)
 
     return () => {
       socket.off('authenticate')
@@ -119,25 +117,8 @@ function App() {
   })
 
   useStatusUpdate(({ userId, status }: { userId: string; status: string }) => {
-    setUser((prev) => {
-      if (!prev || prev._id !== userId || prev.status === status) return prev
-      return { ...prev, status }
-    })
-    // Update the status of the contact in the contacts list
-    setContacts((prevContacts) => {
-      return prevContacts.map((contact) => {
-        if (contact.recipient._id === userId) {
-          return {
-            ...contact,
-            recipient: {
-              ...contact.recipient,
-              status
-            }
-          }
-        }
-        return contact
-      })
-    })
+    updateStatus(userId, status)
+    updateContactStatus(userId, status)
   })
 
   const handleSendMessage = (content: string) => {
@@ -204,7 +185,8 @@ function App() {
         onSuccess: (data: any) => {
           setContactError('')
           setContactSuccess(data.data.message)
-          setContacts((prevContacts) => [...prevContacts, data.data.contact])
+          const newContact = data.data.contact
+          addContact(newContact)
         },
         onError: (error: any) => {
           console.error('Error adding contact:', error)
@@ -216,10 +198,7 @@ function App() {
   }
 
   const onSearchContacts = (query: string) => {
-    const filteredContacts = contacts.filter((contact) =>
-      contact.nickname?.toLowerCase().includes(query.toLowerCase())
-    )
-    setContacts(filteredContacts)
+    searchContacts(query)
   }
 
   const handleDeleteChat = (conversationId: string) => {
@@ -253,8 +232,6 @@ function App() {
         <Layout
           sidebar={
             <Sidebar
-              user={user}
-              contacts={contacts}
               onChatSelect={handleChatSelect}
               activeConversation={activeConversation}
               darkMode={darkMode}
@@ -272,12 +249,11 @@ function App() {
             />
           }
           content={
-            activeConversation ? (
+            activeConversation && response?.success && user ? (
               <ChatArea
                 activeConversation={activeConversation}
                 users={mockUsers}
                 currentUser={user}
-                contacts={contacts}
                 onSendMessage={handleSendMessage}
                 newMessage={newMessage}
                 onDeleteChat={handleDeleteChat}

@@ -17,20 +17,20 @@ import { useMessages } from '../hooks/queries/useMessages'
 // import { formatUserLastSeen } from '../utils/dateUtils'
 import { getOtherParticipant } from '../utils/conversation.utils'
 import { getContactById } from '../utils/user.utils'
-import { Contact, Conversation } from '../types/index'
+import { Conversation } from '../types/index'
 import { User, Theme } from '../types'
 import { User as ZUser, Message } from '../types/index'
 
 import ringtone from '../assets/ringtone.mp3'
 
 import { mockChats } from '../data/mockData'
+import { useContactsStore } from '../store/useContacts'
 const mockChat = mockChats[0]
 
 interface ChatAreaProps {
   activeConversation: Conversation
   users: User[]
   currentUser: ZUser
-  contacts: Contact[]
   onSendMessage: (content: string) => void
   newMessage: Message | undefined
   onDeleteChat: (chatId: string) => void
@@ -42,7 +42,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   activeConversation,
   users,
   currentUser,
-  contacts,
   onSendMessage,
   newMessage,
   onDeleteChat,
@@ -58,6 +57,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [isAudioCallOpen, setIsAudioCallOpen] = useState(false)
   const [isVideoCallOpen, setIsVideoCallOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
+
+  const { contacts } = useContactsStore((state) => state)
+
+  console.log(contacts)
 
   const { data: messagesResponse, isPending } = useMessages(activeConversation._id)
 
