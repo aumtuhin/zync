@@ -3,6 +3,7 @@ import { Message, User } from '../types/index'
 import { formatMessageTime } from '../utils/dateUtils'
 import MessageStatus from './MessageStatus'
 import { MoreVertical, Trash2 } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface MessageBubbleProps {
   message: Message
@@ -20,9 +21,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onDelete
 }) => {
   const [showOptions, setShowOptions] = useState(false)
-
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }} // Start slightly below and transparent
+      animate={{ opacity: 1, y: 0 }} // Animate to normal position and visible
+      exit={{ opacity: 0, y: -10 }} // Slide up when deleted
+      transition={{ duration: 0.2 }}
       className={`flex mb-1 group ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
       onMouseEnter={() => setShowOptions(true)}
       onMouseLeave={() => setShowOptions(false)}
@@ -43,8 +48,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
 
         <div className="flex items-center justify-end mt-1 space-x-1">
-          <span className="text-[10px] text-gray-100 dark:text-gray-400">
-            {formatMessageTime(new Date())}
+          <span className="text-[10px] text-gray-400 dark:text-gray-400">
+            {formatMessageTime(new Date(message.createdAt))}
           </span>
           {isCurrentUser && <MessageStatus status={message.status} size={14} />}
         </div>
@@ -76,7 +81,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
 

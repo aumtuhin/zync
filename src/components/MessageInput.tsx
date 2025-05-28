@@ -26,7 +26,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
     }
   }
 
-  const handleEmojiSelect = (emoji: any) => {
+  const handleEmojiSelect = (emoji: { native: string }) => {
     setMessage((prev) => prev + emoji.native)
     setShowEmojiPicker(false)
   }

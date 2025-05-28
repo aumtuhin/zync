@@ -12,8 +12,8 @@ const MessageStatus: React.FC<MessageStatusProps> = ({ status, size = 16 }) => {
   } else if (status === 'delivered') {
     return (
       <div className="relative flex">
-        <Check size={size} className="text-gray-500 dark:text-gray-400 absolute" />
-        <Check size={size} className="text-gray-500 dark:text-gray-400 ml-[2px]" />
+        <Check size={size} className="text-gray-300 dark:text-gray-400 absolute" />
+        <Check size={size} className="text-gray-300 dark:text-gray-400 ml-[2px] mt-0.3" />
       </div>
     )
   } else {

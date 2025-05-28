@@ -1,7 +1,8 @@
-import React from 'react'
 import { Dialog } from '@headlessui/react'
 import { Eye, Users, Clock, Shield, X } from 'lucide-react'
 import { User } from '../types/index'
+import { usePreferencesStore } from '../store/userPreferences'
+import { useRef } from 'react'
 
 interface PrivacyDialogProps {
   isOpen: boolean
@@ -10,8 +11,19 @@ interface PrivacyDialogProps {
 }
 
 const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose }) => {
+  const closeButtonRef = useRef(null)
+
+  const { hideOrShowStatus, changeLastSeen, isShowingStatus, lastSeen } = usePreferencesStore(
+    (state) => state
+  )
+
   return (
-    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      initialFocus={closeButtonRef}
+      className="fixed inset-0 z-50 overflow-y-auto"
+    >
       <div className="flex items-center justify-center min-h-screen">
         <Dialog.Overlay className="fixed inset-0 bg-black/30" />
 
@@ -22,6 +34,7 @@ const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose }) => {
             </Dialog.Title>
             <button
               onClick={onClose}
+              ref={closeButtonRef}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
               <X size={20} />
@@ -41,7 +54,12 @@ const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose }) => {
                       <span className="ml-3 text-gray-700 dark:text-gray-200">Show last seen</span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={lastSeen}
+                        onChange={(e) => changeLastSeen(e.target.checked)}
+                      />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                     </label>
                   </div>
@@ -53,7 +71,12 @@ const PrivacyDialog: React.FC<PrivacyDialogProps> = ({ isOpen, onClose }) => {
                       </span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={isShowingStatus}
+                        onChange={(e) => hideOrShowStatus(e.target.checked)}
+                      />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                     </label>
                   </div>

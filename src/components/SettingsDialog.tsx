@@ -89,7 +89,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 </button>
 
                 <div className="space-y-4">
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Primary Color
                     </label>
@@ -99,9 +99,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       onChange={(e) => handleColorChange('primary', e.target.value)}
                       className="w-full h-10 rounded cursor-pointer"
                     />
-                  </div>
+                  </div> */}
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Secondary Color
                     </label>
@@ -111,9 +111,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       onChange={(e) => handleColorChange('secondary', e.target.value)}
                       className="w-full h-10 rounded cursor-pointer"
                     />
-                  </div>
+                  </div> */}
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Background Color
                     </label>
@@ -123,9 +123,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       onChange={(e) => handleColorChange('background', e.target.value)}
                       className="w-full h-10 rounded cursor-pointer"
                     />
-                  </div>
+                  </div> */}
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Primary Text Color
                     </label>
@@ -135,9 +135,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       onChange={(e) => handleColorChange('textPrimary', e.target.value)}
                       className="w-full h-10 rounded cursor-pointer"
                     />
-                  </div>
+                  </div> */}
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Secondary Text Color
                     </label>
@@ -147,7 +147,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       onChange={(e) => handleColorChange('textSecondary', e.target.value)}
                       className="w-full h-10 rounded cursor-pointer"
                     />
-                  </div>
+                  </div> */}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -215,7 +215,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
                 <div className="space-y-2">
                   <button
-                    onClick={() => setIsProfileOpen(true)}
+                    onClick={() => {
+                      onClose()
+                      setIsProfileOpen(true)
+                    }}
                     className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
                     <UserCircle className="text-gray-500 dark:text-gray-400" size={20} />
@@ -228,7 +231,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   </button>
 
                   <button
-                    onClick={() => setIsPrivacyOpen(true)}
+                    onClick={() => {
+                      onClose()
+                      setIsPrivacyOpen(true)
+                    }}
                     className="w-full flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
                     <Lock className="text-gray-500 dark:text-gray-400" size={20} />

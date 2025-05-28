@@ -13,6 +13,9 @@ import { useSocket } from './hooks/socket/useSocket'
 import { useMessageSocket } from './hooks/socket/useMessageSocket'
 import { useStatusUpdate } from './hooks/socket/useStatusUpdate'
 
+//store
+import { useProfileStore } from './store/useProfile'
+
 import socket from './lib/socket.lib'
 import {
   getConversationById,
@@ -42,9 +45,14 @@ function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [theme, setTheme] = useState<Theme>(chatTheme)
 
+  const { loadUser } = useProfileStore((state) => state)
+
   useEffect(() => {
     if (response?.success) {
-      const userData = response.data.user
+      const userData = response?.data?.user
+      if (userData) {
+        loadUser(userData)
+      }
       setUser(userData)
       setContacts(response.data.contacts || [])
       setConversations(response.data.conversations || [])
@@ -100,7 +108,6 @@ function App() {
   })
 
   useStatusUpdate(({ userId, status }: { userId: string; status: string }) => {
-    console.log('Status update received:', userId, status)
     setUser((prev) => {
       if (!prev || prev._id !== userId || prev.status === status) return prev
       return { ...prev, status }

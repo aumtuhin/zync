@@ -24,8 +24,6 @@ const ChatListItem = ({
   const timeStamp = new Date()
   const status = recipient?.status?.toString().toLocaleLowerCase()
 
-  console.log(recipient)
-
   return (
     <div
       className={`flex items-center px-4 py-3 cursor-pointer border-b border-gray-100 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-750 transition-colors ${

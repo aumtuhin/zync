@@ -2,7 +2,9 @@ import React, { useRef, useEffect, useState } from 'react'
 import ProfileHeader from './ProfileHeader'
 import MessageBubble from './MessageBubble'
 import MessageInput from './MessageInput'
-import { Phone, Video, MoreVertical, Trash2, Search } from 'lucide-react'
+import { Phone, Video, Trash2, Search } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
+
 // import StatusDot from './StatusDot'
 import DeleteChatDialog from './DeleteChatDialog'
 import MessageSearchDialog from './MessageSearchDialog'
@@ -163,9 +165,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
               >
                 <Trash2 size={20} />
               </button>
-              <button className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full">
-                <MoreVertical size={20} />
-              </button>
+              <button className="text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-full"></button>
             </div>
           }
         />
@@ -189,13 +189,15 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                 }}
                 className="transition-colors duration-500"
               >
-                <MessageBubble
-                  message={message}
-                  isCurrentUser={isCurrentUser}
-                  sender={sender}
-                  isConsecutive={isConsecutive}
-                  onDelete={() => handleMessageDelete(message)}
-                />
+                <AnimatePresence initial={false}>
+                  <MessageBubble
+                    message={message}
+                    isCurrentUser={isCurrentUser}
+                    sender={sender}
+                    isConsecutive={isConsecutive}
+                    onDelete={() => handleMessageDelete(message)}
+                  />
+                </AnimatePresence>
               </div>
             )
           })}

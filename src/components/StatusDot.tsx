@@ -6,7 +6,6 @@ interface StatusDotProps {
 }
 
 const StatusDot: React.FC<StatusDotProps> = ({ status, className = '' }) => {
-  console.log('StatusDot', status)
   return (
     <div className={`${className}`}>
       <div
