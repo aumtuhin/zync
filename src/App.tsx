@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
@@ -30,10 +31,20 @@ import { chatTheme } from './theme/chat'
 import messageReceiveTone from './assets/sounds/message_receive.mp3'
 
 function App() {
+  const navigate = useNavigate()
   const { mutate: mutateAddContact } = useAddContact()
   const { mutate: mutateCreateConversation, isPending: isPendingCreateConv } =
     useCreateConversation()
-  const { data: response, isPending } = useProfile()
+  const { data: response, isPending, error } = useProfile()
+
+  if (error) {
+    navigate('/oops', {
+      state: {
+        fromError: true,
+        message: 'Something went wrong while fetching data.'
+      }
+    })
+  }
 
   const [user, setUser] = useState<User>()
   const [contacts, setContacts] = useState<Contact[]>([])

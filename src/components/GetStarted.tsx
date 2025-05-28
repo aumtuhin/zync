@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react'
-import { Phone, Mail, ArrowRight, User, AtSign } from 'lucide-react'
+import { Phone, Mail, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import {
   useRequestEmailOTP,
@@ -9,7 +9,7 @@ import {
   useVerifyEmailOTP,
   useVerifySmsOTP
 } from '../hooks/queries/useOTP'
-import { useCompleteProfile, useProfile } from '../hooks/queries/useProfile'
+import { useProfile } from '../hooks/queries/useProfile'
 import { isTokenValid, tokenStorage } from '../utils/auth.utils'
 
 const GetStarted: React.FC = () => {
@@ -17,7 +17,6 @@ const GetStarted: React.FC = () => {
   const { mutate: mutateRequestSmsOtp } = useRequestSmsOTP()
   const { mutate: mutateVerifyEmailOtp, isPending: isVerifyEmailOtpPending } = useVerifyEmailOTP()
   const { mutate: mutateVerifySmsOtp } = useVerifySmsOTP()
-  const { mutate: mutateCompleteProfile } = useCompleteProfile()
   const { data: response } = useProfile()
 
   const navigate = useNavigate()
@@ -25,18 +24,20 @@ const GetStarted: React.FC = () => {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
-  const [step, setStep] = useState<'input' | 'otp' | 'profile'>('input')
+  const [step, setStep] = useState<'input' | 'otp'>('input')
   const [error, setError] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [username, setUsername] = useState('')
+
+  const userData = response?.data?.user
 
   useEffect(() => {
     const token = isTokenValid()
-    if (token && !response?.data.user.isProfileCompleted) {
-      setStep('profile')
+    if (token && !userData?.isProfileCompleted) {
+      navigate('/complete-profile')
+      return
     }
-    if (token && response?.data.user.isProfileCompleted) {
+    if (token && userData?.isProfileCompleted) {
       navigate('/chat')
+      return
     }
   }, [response, step])
 
@@ -57,10 +58,6 @@ const GetStarted: React.FC = () => {
 
   const validatePhone = (phone: string) => {
     return /^\+?[\d\s-]{10,}$/.test(phone)
-  }
-
-  const validateUsername = (username: string) => {
-    return /^[a-zA-Z0-9_]{3,15}$/.test(username)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -128,7 +125,8 @@ const GetStarted: React.FC = () => {
                     navigate('/chat')
                     return
                   } else {
-                    setStep('profile')
+                    navigate('/complete-profile')
+                    return
                   }
                 } else {
                   setError('Something went wrong. Please try again.')
@@ -147,7 +145,13 @@ const GetStarted: React.FC = () => {
                 if (response) {
                   tokenStorage.setToken(response.data.token as string)
                   setError('')
-                  setStep('profile')
+                  if (response.data.user.isProfileCompleted) {
+                    navigate('/chat')
+                    return
+                  } else {
+                    navigate('/complete-profile')
+                    return
+                  }
                 } else {
                   setError('Something went wrong. Please try again.')
                 }
@@ -179,37 +183,6 @@ const GetStarted: React.FC = () => {
         })
       }
     }
-  }
-
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-
-    if (!fullName.trim()) {
-      setError('Please enter your full name')
-      return
-    }
-
-    if (!validateUsername(username)) {
-      setError(
-        'Username must be 3-15 characters long and can only contain letters, numbers, and underscores'
-      )
-      return
-    }
-
-    mutateCompleteProfile(
-      { fullName, username },
-      {
-        onSuccess: (data: any) => {
-          setError('')
-          if (data.data.success) navigate('/chat')
-        },
-        onError: (error: any) => {
-          console.error('Error completing profile:', error.response.data.message)
-          setError(error.response.data.message)
-        }
-      }
-    )
   }
 
   return (
@@ -290,94 +263,43 @@ const GetStarted: React.FC = () => {
               </button>
             </div>
           </form>
-        ) : step === 'otp' ? (
-          <div className="mt-8 space-y-6 bg-white/10 backdrop-blur-lg p-8 rounded-2xl">
-            <div className="flex justify-center space-x-3">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={otpRefs[index]}
-                  type="text"
-                  maxLength={1}
-                  className="w-12 h-12 text-center text-xl border-2 rounded-lg focus:border-white/50 focus:outline-none bg-white/10 text-white backdrop-blur-lg"
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                />
-              ))}
-            </div>
-
-            {error && <p className="text-red-300 text-sm text-center">{error}</p>}
-            {isVerifyEmailOtpPending && (
-              <p className="text-white/80 text-sm text-center">Verifying...</p>
-            )}
-
-            <div className="flex justify-between items-center text-sm">
-              <button
-                type="button"
-                onClick={() => setStep('input')}
-                className="text-white/80 hover:text-white"
-              >
-                Change {method}
-              </button>
-              <button type="button" className="text-white/80 hover:text-white">
-                Resend code
-              </button>
-            </div>
-          </div>
         ) : (
-          <form
-            className="mt-8 space-y-6 bg-white/10 backdrop-blur-lg p-8 rounded-2xl"
-            onSubmit={handleProfileSubmit}
-          >
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="fullName" className="sr-only">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-2.5 text-white/60" size={20} />
+          step === 'otp' && (
+            <div className="mt-8 space-y-6 bg-white/10 backdrop-blur-lg p-8 rounded-2xl">
+              <div className="flex justify-center space-x-3">
+                {otp.map((digit, index) => (
                   <input
-                    id="fullName"
+                    key={index}
+                    ref={otpRefs[index]}
                     type="text"
-                    required
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-white/20 placeholder-white/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent sm:text-sm bg-white/10 backdrop-blur-lg"
-                    placeholder="Full Name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    maxLength={1}
+                    className="w-12 h-12 text-center text-xl border-2 rounded-lg focus:border-white/50 focus:outline-none bg-white/10 text-white backdrop-blur-lg"
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
                   />
-                </div>
+                ))}
               </div>
 
-              <div>
-                <label htmlFor="username" className="sr-only">
-                  Username
-                </label>
-                <div className="relative">
-                  <AtSign className="absolute left-3 top-2.5 text-white/60" size={20} />
-                  <input
-                    id="username"
-                    type="text"
-                    required
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-white/20 placeholder-white/60 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent sm:text-sm bg-white/10 backdrop-blur-lg"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                </div>
+              {error && <p className="text-red-300 text-sm text-center">{error}</p>}
+              {isVerifyEmailOtpPending && (
+                <p className="text-white/80 text-sm text-center">Verifying...</p>
+              )}
+
+              <div className="flex justify-between items-center text-sm">
+                <button
+                  type="button"
+                  onClick={() => setStep('input')}
+                  className="text-white/80 hover:text-white"
+                >
+                  Change {method}
+                </button>
+                <button type="button" className="text-white/80 hover:text-white">
+                  Resend code
+                </button>
               </div>
             </div>
-
-            {error && <p className="text-red-300 text-sm text-center">{error}</p>}
-
-            <button
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-purple-600 bg-white hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50 transition-all shadow-lg"
-            >
-              Complete Setup
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </button>
-          </form>
+          )
         )}
       </div>
     </div>
