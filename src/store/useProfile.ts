@@ -8,7 +8,7 @@ type State = {
 
 type Actions = {
   loadUser: (user: User) => void
-  updateStatus: (userId: string, status: string) => void
+  updateUserStatus: (userId: string, status: string) => void
 }
 
 const initialState: State = {
@@ -22,7 +22,7 @@ export const useProfileStore = create<State & Actions>()(
       set((state) => {
         state.user = user
       }),
-    updateStatus: (userId: string, status: string) =>
+    updateUserStatus: (userId: string, status: string) =>
       set((state) => {
         if (state.user._id === userId) {
           state.user.status = status

@@ -75,7 +75,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <div className={`absolute ${isCurrentUser ? '-right-2 top-0' : '-left-2 top-0'}`}>
             <div
               className={`w-3 h-3 transform rotate-45 ${
-                isCurrentUser ? 'bg-indigo-500' : 'bg-white dark:bg-gray-700'
+                isCurrentUser ? 'bg-indigo-500' : 'bg-white dark:bg-gray-600'
               }`}
             />
           </div>

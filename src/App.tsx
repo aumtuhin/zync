@@ -17,6 +17,7 @@ import { useStatusUpdate } from './hooks/socket/useStatusUpdate'
 //store
 import { useProfileStore } from './store/useProfile'
 import { useContactsStore } from './store/useContacts'
+import { useConversationStore } from './store/useConversations'
 
 import socket from './lib/socket.lib'
 import {
@@ -55,16 +56,19 @@ function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [theme, setTheme] = useState<Theme>(chatTheme)
 
-  const { loadUser, user, updateStatus } = useProfileStore((state) => state)
+  const { loadUser, user, updateUserStatus } = useProfileStore((state) => state)
   const { loadContacts, contacts, addContact, searchContacts, updateContactStatus } =
     useContactsStore((state) => state)
+  const { loadConversations } = useConversationStore((state) => state)
 
   useEffect(() => {
     if (response?.success) {
       const userData = response?.data?.user
       const contactsData = response?.data?.contacts || []
+      const conversationsData = response?.data?.conversations || []
       loadUser(userData)
       loadContacts(contactsData)
+      loadConversations(conversationsData)
       setConversations(response.data.conversations || [])
       setActiveConversation(userData.lastActiveConversation || undefined)
     }
@@ -82,42 +86,71 @@ function App() {
     }
   }, [user, socket])
 
-  useMessageSocket((response) => {
-    if (!response) return
-    const existingConversation = isConversationExisting(
-      conversations,
-      response.message.conversation
-    )
-    if (!existingConversation) {
-      setConversations((prevConv) => [response.conversation!, ...prevConv])
-    }
-
-    setConversations((prevConversations) => {
-      const newConv = response?.conversation
-      if (!newConv) return prevConversations
-
-      const index = prevConversations.findIndex((c) => String(c._id) === String(newConv._id))
-
-      if (index !== -1) {
-        const updated = [...prevConversations]
-        updated[index] = newConv
-        return updated
-      } else {
-        return [newConv, ...prevConversations]
+  useMessageSocket(
+    (response) => {
+      if (!response.conversation) return
+      if (response.message.sender._id !== user?._id) {
+        socket.emit('send_message_status', {
+          messageId: response.message._id,
+          status: 'delivered',
+          senderId: response.message.sender._id
+        })
       }
-    })
+      const existingConversation = isConversationExisting(
+        conversations,
+        response.message.conversation // conv id
+      )
+      if (!existingConversation) {
+        setConversations((prevConv) => [response.conversation!, ...prevConv])
+        return
+      }
 
-    if (response?.message.sender._id !== user?._id) {
-      playSound(messageReceiveTone)
-      stopSound(new Audio(messageReceiveTone))
+      setConversations((prevConversations) => {
+        const newConv = response?.conversation
+        if (!newConv) return prevConversations
+
+        const index = prevConversations.findIndex((c) => String(c._id) === String(newConv._id))
+
+        if (index !== -1) {
+          const updated = [...prevConversations]
+          updated[index] = newConv
+          return updated
+        } else {
+          return [newConv, ...prevConversations]
+        }
+      })
+
+      if (response?.message.sender._id !== user?._id) {
+        playSound(messageReceiveTone)
+        stopSound(new Audio(messageReceiveTone))
+      }
+
+      // todo handle failed or retry based on response
+      setNewMessage(response.message)
+    },
+    (message) => {
+      if (message.sender._id !== user?._id) {
+        updateContactStatus(message.sender._id, message.status)
+      }
+      setNewMessage(message)
+      // if (message.sender._id === user?._id) {
+      //   setConversations((prevConversations) =>
+      //     prevConversations.map((conv) => {
+      //       if (conv._id !== message.conversation) return conv
+      //       return {
+      //         ...conv,
+      //         messages: conv.messages.map((msg) =>
+      //           msg._id === message._id ? { ...msg, status: message.status } : msg
+      //         )
+      //       }
+      //     })
+      //   )
+      // }
     }
-
-    // todo handle failed or retry based on response
-    setNewMessage(response.message)
-  })
+  )
 
   useStatusUpdate(({ userId, status }: { userId: string; status: string }) => {
-    updateStatus(userId, status)
+    updateUserStatus(userId, status)
     updateContactStatus(userId, status)
   })
 

@@ -106,8 +106,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const otherParticipant = getOtherParticipant(activeConversation, currentUser._id)
   const contact = contacts.find((contact) => contact.recipient._id === otherParticipant?._id)
 
-  console.log(activeConversation)
-
   const chatBackgroundStyle = theme.chatBackground
     ? {
         backgroundImage: `url(${theme.chatBackground})`,
