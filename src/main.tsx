@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute.tsx'
 import NotFoundPage from './pages/NotFound.tsx'
 import Oops from './pages/Oops.tsx'
 import ErrorBoundary from './pages/ErrorBoundary.tsx'
+import MobileLanding from './pages/MobileLanding.tsx'
 
 const queryClient = new QueryClient()
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
         <App />
       </ProtectedRoute>
     )
+  },
+  {
+    path: '/mobile-landing',
+    element: <MobileLanding />
   },
   {
     path: '*',
