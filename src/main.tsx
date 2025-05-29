@@ -20,22 +20,30 @@ import './index.css'
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <GetStarted />
+    element: (
+      <DeviceGuard>
+        <GetStarted />
+      </DeviceGuard>
+    )
   },
   {
     path: '/complete-profile',
     element: (
-      <ProtectedRoute>
-        <CompleteProfile />
-      </ProtectedRoute>
+      <DeviceGuard>
+        <ProtectedRoute>
+          <CompleteProfile />
+        </ProtectedRoute>
+      </DeviceGuard>
     )
   },
   {
     path: '/chat',
     element: (
-      <ProtectedRoute>
-        <App />
-      </ProtectedRoute>
+      <DeviceGuard>
+        <ProtectedRoute>
+          <App />
+        </ProtectedRoute>
+      </DeviceGuard>
     )
   },
   {
@@ -44,25 +52,31 @@ const router = createBrowserRouter([
   },
   {
     path: '*',
-    element: <NotFoundPage />
+    element: (
+      <DeviceGuard>
+        <NotFoundPage />
+      </DeviceGuard>
+    )
   },
   {
     path: '/oops',
-    element: <Oops />
+    element: (
+      <DeviceGuard>
+        <Oops />
+      </DeviceGuard>
+    )
   }
 ])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <DeviceGuard>
-        <ErrorBoundary>
-          <RouterProvider
-            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-            router={router}
-          />
-        </ErrorBoundary>{' '}
-      </DeviceGuard>
+      <ErrorBoundary>
+        <RouterProvider
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          router={router}
+        />
+      </ErrorBoundary>
     </QueryClientProvider>
   </StrictMode>
 )
