@@ -8,6 +8,7 @@ import CompleteProfile from './pages/CompleteProfile.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import NotFoundPage from './pages/NotFound.tsx'
 import Oops from './pages/Oops.tsx'
+import DeviceGuard from './components/MobileRedirectWrapper.tsx'
 import ErrorBoundary from './pages/ErrorBoundary.tsx'
 import MobileLanding from './pages/MobileLanding.tsx'
 
@@ -54,12 +55,14 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <RouterProvider
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-          router={router}
-        />
-      </ErrorBoundary>{' '}
+      <DeviceGuard>
+        <ErrorBoundary>
+          <RouterProvider
+            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+            router={router}
+          />
+        </ErrorBoundary>{' '}
+      </DeviceGuard>
     </QueryClientProvider>
   </StrictMode>
 )
