@@ -20,6 +20,7 @@ import { useContactsStore } from './store/useContacts'
 import { useConversationStore } from './store/useConversations'
 
 import socket from './lib/socket.lib'
+
 import {
   getConversationById,
   getOtherParticipant,
@@ -129,23 +130,12 @@ function App() {
       setNewMessage(response.message)
     },
     (message) => {
+      console.log('status updated:', message)
+      const conversation = getConversationById(conversations, message.conversation)
+      console.log('conversation:', conversation)
       if (message.sender._id !== user?._id) {
         updateContactStatus(message.sender._id, message.status)
       }
-      setNewMessage(message)
-      // if (message.sender._id === user?._id) {
-      //   setConversations((prevConversations) =>
-      //     prevConversations.map((conv) => {
-      //       if (conv._id !== message.conversation) return conv
-      //       return {
-      //         ...conv,
-      //         messages: conv.messages.map((msg) =>
-      //           msg._id === message._id ? { ...msg, status: message.status } : msg
-      //         )
-      //       }
-      //     })
-      //   )
-      // }
     }
   )
 

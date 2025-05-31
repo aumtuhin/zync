@@ -1,4 +1,10 @@
+import { isMobile } from 'react-device-detect'
+import { Navigate } from 'react-router-dom'
+
 const MobileLanding = () => {
+  if (!isMobile) {
+    return <Navigate to="/" replace />
+  }
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gray-100 text-center p-4">
       <h1 className="text-2xl font-bold mb-4">Mobile Not Supported</h1>
