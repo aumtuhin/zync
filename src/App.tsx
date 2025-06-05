@@ -10,9 +10,9 @@ import EmptyChatArea from './components/EmptyChatArea'
 import { useProfile } from './hooks/queries/useProfile'
 import { useAddContact } from './hooks/queries/useContact'
 import { useCreateConversation } from './hooks/queries/useChat'
-import { useSocket } from './hooks/socket/useSocket'
-import { useMessageSocket } from './hooks/socket/useMessageSocket'
-import { useStatusUpdate } from './hooks/socket/useStatusUpdate'
+import { useSocket } from './hooks/sockets/useSocket'
+import { useMessageSocket } from './hooks/sockets/useMessageSocket'
+import { useStatusUpdate } from './hooks/sockets/useStatusUpdate'
 
 //store
 import { useProfileStore } from './store/useProfile'
@@ -21,11 +21,7 @@ import { useConversationStore } from './store/useConversations'
 
 import socket from './lib/socket.lib'
 
-import {
-  getConversationById,
-  getOtherParticipant,
-  isConversationExisting
-} from './utils/conversation.utils'
+import { getConversationById, isConversationExisting } from './utils/conversation.utils'
 import { playSound, stopSound } from './utils/sound.utils'
 import { Conversation, Message, User } from './types/index'
 import { Theme } from './types'
@@ -87,78 +83,52 @@ function App() {
     }
   }, [user, socket])
 
-  useMessageSocket(
-    (response) => {
-      if (!response.conversation) return
-      if (response.message.sender._id !== user?._id) {
-        socket.emit('send_message_status', {
-          messageId: response.message._id,
-          status: 'delivered',
-          senderId: response.message.sender._id
-        })
-      }
-      const existingConversation = isConversationExisting(
-        conversations,
-        response.message.conversation // conv id
-      )
-      if (!existingConversation) {
-        setConversations((prevConv) => [response.conversation!, ...prevConv])
-        return
-      }
-
-      setConversations((prevConversations) => {
-        const newConv = response?.conversation
-        if (!newConv) return prevConversations
-
-        const index = prevConversations.findIndex((c) => String(c._id) === String(newConv._id))
-
-        if (index !== -1) {
-          const updated = [...prevConversations]
-          updated[index] = newConv
-          return updated
-        } else {
-          return [newConv, ...prevConversations]
-        }
+  useMessageSocket((response) => {
+    if (!response.conversation) return
+    if (response.message.sender._id !== user?._id) {
+      socket.emit('send_message_status', {
+        messageId: response.message._id,
+        status: 'delivered',
+        senderId: response.message.sender._id
       })
-
-      if (response?.message.sender._id !== user?._id) {
-        playSound(messageReceiveTone)
-        stopSound(new Audio(messageReceiveTone))
-      }
-
-      // todo handle failed or retry based on response
-      setNewMessage(response.message)
-    },
-    (message) => {
-      console.log('status updated:', message)
-      const conversation = getConversationById(conversations, message.conversation)
-      console.log('conversation:', conversation)
-      if (message.sender._id !== user?._id) {
-        updateContactStatus(message.sender._id, message.status)
-      }
     }
-  )
+    const existingConversation = isConversationExisting(
+      conversations,
+      response.message.conversation // conv id
+    )
+    if (!existingConversation) {
+      setConversations((prevConv) => [response.conversation!, ...prevConv])
+      return
+    }
+
+    setConversations((prevConversations) => {
+      const newConv = response?.conversation
+      if (!newConv) return prevConversations
+
+      const index = prevConversations.findIndex((c) => String(c._id) === String(newConv._id))
+
+      if (index !== -1) {
+        const updated = [...prevConversations]
+        updated[index] = newConv
+        return updated
+      } else {
+        return [newConv, ...prevConversations]
+      }
+    })
+
+    if (response?.message.sender._id !== user?._id) {
+      playSound(messageReceiveTone)
+      stopSound(new Audio(messageReceiveTone))
+    }
+
+    // todo handle failed or retry based on response
+    setNewMessage(response.message)
+  })
 
   useStatusUpdate(({ userId, status }: { userId: string; status: string }) => {
     updateUserStatus(userId, status)
     updateContactStatus(userId, status)
   })
-
-  const handleSendMessage = (content: string) => {
-    if (!activeConversation?._id) return
-    if (!user?._id) return
-
-    const otherParticipant = getOtherParticipant(activeConversation, user._id)
-    if (!otherParticipant) return
-
-    if (socket) {
-      socket.emit('send_message', {
-        senderId: user._id,
-        recipientId: otherParticipant._id,
-        content
-      })
-    }
-  }
 
   const handleChatSelect = (conversationId: string) => {
     const activeConv = getConversationById(conversations, conversationId)
@@ -256,7 +226,6 @@ function App() {
           sidebar={
             <Sidebar
               onChatSelect={handleChatSelect}
-              activeConversation={activeConversation}
               darkMode={darkMode}
               setDarkMode={setDarkMode}
               onCreateChat={handleCreateChat}
@@ -268,6 +237,7 @@ function App() {
               contactError={contactError}
               contactSuccess={contactSuccess}
               conversations={conversations}
+              activeConversation={activeConversation}
               isPendingCreateConv={isPendingCreateConv}
             />
           }
@@ -276,8 +246,7 @@ function App() {
               <ChatArea
                 activeConversation={activeConversation}
                 users={mockUsers}
-                currentUser={user}
-                onSendMessage={handleSendMessage}
+                user={user}
                 newMessage={newMessage}
                 onDeleteChat={handleDeleteChat}
                 onDeleteMessage={handleDeleteMessage}

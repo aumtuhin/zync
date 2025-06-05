@@ -66,11 +66,7 @@ const Sidebar = ({
   }
 
   if (!user) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Loading user data...</p>
-      </div>
-    )
+    return
   }
 
   return (

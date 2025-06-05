@@ -35,7 +35,7 @@ export interface Message {
   conversation: string
   sender: User
   content: string
-  status: 'sent' | 'delivered' | 'read' | 'failed'
+  status: 'sent' | 'delivered' | 'read' | 'failed' | string
   readBy: string[] // Array of user IDs who read the message
   deletedFor: string[] // Array of user IDs the message is deleted for
   createdAt: Date

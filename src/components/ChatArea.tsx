@@ -15,6 +15,7 @@ import VideoCallWindow from './VideoCallWindow'
 import { useMessages } from '../hooks/queries/useMessages'
 
 // import { formatUserLastSeen } from '../utils/dateUtils'
+import socket from '../lib/socket.lib'
 import { getOtherParticipant } from '../utils/conversation.utils'
 import { Conversation } from '../types/index'
 import { User, Theme } from '../types'
@@ -24,13 +25,13 @@ import ringtone from '../assets/ringtone.mp3'
 
 import { mockChats } from '../data/mockData'
 import { useContactsStore } from '../store/useContacts'
+import { useConversationStore } from '../store/useConversations'
 const mockChat = mockChats[0]
 
 interface ChatAreaProps {
   activeConversation: Conversation
   users: User[]
-  currentUser: ZUser
-  onSendMessage: (content: string) => void
+  user: ZUser
   newMessage: Message | undefined
   onDeleteChat: (chatId: string) => void
   onDeleteMessage: (messageId: string, deleteForEveryone: boolean) => void
@@ -40,8 +41,7 @@ interface ChatAreaProps {
 const ChatArea: React.FC<ChatAreaProps> = ({
   activeConversation,
   users,
-  currentUser,
-  onSendMessage,
+  user,
   newMessage,
   onDeleteChat,
   onDeleteMessage,
@@ -55,23 +55,23 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [isDeleteMessageDialogOpen, setIsDeleteMessageDialogOpen] = useState(false)
   const [isAudioCallOpen, setIsAudioCallOpen] = useState(false)
   const [isVideoCallOpen, setIsVideoCallOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
 
   const { contacts } = useContactsStore((state) => state)
+  const { messages, loadMessages, addNewMessage } = useConversationStore((state) => state)
 
   const { data: messagesResponse, isPending } = useMessages(activeConversation._id)
 
   useEffect(() => {
-    if (messagesResponse?.success) {
-      setMessages(messagesResponse.data.messages)
+    if (messagesResponse?.data.messages) {
+      loadMessages(messagesResponse.data.messages)
     }
-  }, [messagesResponse?.success, messagesResponse?.data.messages])
+  }, [messagesResponse?.data.messages, loadMessages])
 
   useEffect(() => {
     if (newMessage && activeConversation._id === newMessage.conversation) {
-      setMessages((prevMessages) => [...prevMessages, newMessage])
+      addNewMessage(newMessage)
     }
-  }, [newMessage, activeConversation._id])
+  }, [newMessage, activeConversation._id, addNewMessage])
 
   const audioRef = useRef(new Audio(ringtone))
 
@@ -79,6 +79,22 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const stopRingtone = () => {
     audioRef.current.pause()
     audioRef.current.currentTime = 0
+  }
+
+  const handleSendMessage = (content: string) => {
+    if (!activeConversation?._id) return
+    if (!user?._id) return
+
+    const otherParticipant = getOtherParticipant(activeConversation, user._id)
+    if (!otherParticipant) return
+
+    if (socket) {
+      socket.emit('send_message', {
+        senderId: user._id,
+        recipientId: otherParticipant._id,
+        content
+      })
+    }
   }
 
   useEffect(() => {
@@ -101,9 +117,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   }
 
-  if (!mockChat) return
-
-  const otherParticipant = getOtherParticipant(activeConversation, currentUser._id)
+  const otherParticipant = getOtherParticipant(activeConversation, user._id)
   const contact = contacts.find((contact) => contact.recipient._id === otherParticipant?._id)
 
   const chatBackgroundStyle = theme.chatBackground
@@ -177,7 +191,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         {!isPending &&
           messages &&
           messages.map((message, index) => {
-            const isCurrentUser = message.sender._id === currentUser._id
+            const isCurrentUser = message.sender._id === user._id
             const sender = otherParticipant
 
             const prevMessage = index > 0 ? messages[index - 1] : null
@@ -206,7 +220,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      <MessageInput onSendMessage={onSendMessage} />
+      <MessageInput onSendMessage={handleSendMessage} />
 
       <DeleteChatDialog
         isOpen={isDeleteDialogOpen}
@@ -246,7 +260,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
               stopRingtone()
               setIsAudioCallOpen(false)
             }}
-            caller={currentUser}
+            caller={user}
             receiver={otherParticipant}
           />
 
@@ -256,7 +270,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
               stopRingtone()
               setIsVideoCallOpen(false)
             }}
-            caller={currentUser}
+            caller={user}
             receiver={otherParticipant}
           />
         </>
