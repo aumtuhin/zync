@@ -9,7 +9,6 @@ export const useMessageSocket = (onMessageReceived: (response: SendMessageRespon
   useEffect(() => {
     socket.on('receive_message', onMessageReceived)
     socket.on('message_status_updated', (response: Message) => {
-      console.log('Message status updated:', response)
       if (!response || !response._id) return
       updateMessageStatus(response)
     })

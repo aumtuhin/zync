@@ -34,9 +34,12 @@ export const useConversationStore = create<State & Actions>()(
       set((state) => {
         state.messages.push(newMessage)
       }),
-    updateMessageStatus: (newMessage: Message) =>
-      set((state) => ({
-        messages: state.messages.map((msg) => (msg._id === newMessage._id ? newMessage : msg))
-      }))
+    updateMessageStatus: (newMessage: Message) => {
+      setTimeout(() => {
+        set((state) => ({
+          messages: state.messages.map((msg) => (msg._id === newMessage._id ? newMessage : msg))
+        }))
+      }, 100)
+    }
   }))
 )
