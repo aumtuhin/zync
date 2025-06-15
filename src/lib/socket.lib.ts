@@ -3,8 +3,6 @@ import { tokenStorage } from '../utils/auth.utils'
 
 const socketUrl = import.meta.env.VITE_SOCKET_URL
 
-console.log('Socket URL:', socketUrl)
-
 const token = tokenStorage.getToken()
 
 const socket = io(socketUrl, {
